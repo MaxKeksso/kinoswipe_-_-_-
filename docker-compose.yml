@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kinoswipe_db
+    environment:
+      POSTGRES_USER: kinoswipe
+      POSTGRES_PASSWORD: kinoswipe123
+      POSTGRES_DB: kinoswipe
+    ports:
+      - "5433:5432"  # Используем 5433 для избежания конфликта с локальным PostgreSQL
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kinoswipe"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - kinoswipe_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kinoswipe_app
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: kinoswipe
+      DB_PASSWORD: kinoswipe123
+      DB_NAME: kinoswipe
+      DB_SSLMODE: disable
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/app/migrations
+    restart: unless-stopped
+    networks:
+      - kinoswipe_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: /api/v1
+    container_name: kinoswipe_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - kinoswipe_network
+
+volumes:
+  postgres_data:
+
+networks:
+  kinoswipe_network:
+    driver: bridge
