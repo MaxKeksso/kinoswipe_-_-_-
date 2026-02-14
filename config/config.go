@@ -68,10 +68,13 @@ func Load() (*Config, error) {
 		}
 	}
 
+	// PORT задаёт Railway/Render/Fly; SERVER_HOST 0.0.0.0 нужен для приёма снаружи
+	serverPort := getEnv("PORT", getEnv("SERVER_PORT", "8080"))
+	serverHost := getEnv("SERVER_HOST", "0.0.0.0")
 	config := &Config{
 		Server: ServerConfig{
-			Host: getEnv("SERVER_HOST", "localhost"),
-			Port: getEnv("SERVER_PORT", "8080"),
+			Host: serverHost,
+			Port: serverPort,
 			Env:  getEnv("ENV", "development"),
 		},
 		Database: dbConfig,
