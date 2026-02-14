@@ -1,0 +1,280 @@
+.movie-details-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.movie-details-content {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 900px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.close-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 32px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.movie-details-header {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.movie-details-poster {
+  width: 250px;
+  height: 375px;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.movie-details-info {
+  flex: 1;
+  color: white;
+}
+
+.movie-details-info h2 {
+  color: white;
+  font-size: 32px;
+  margin: 0 0 10px 0;
+}
+
+.movie-title-en {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 18px;
+  margin: 0 0 15px 0;
+  font-style: italic;
+}
+
+.movie-meta {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.movie-meta span {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.movie-ratings {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rating-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+}
+
+.rating-value {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.movie-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.genre-tag {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.movie-description-section {
+  margin-bottom: 30px;
+  color: white;
+}
+
+.movie-description-section h3 {
+  color: white;
+  font-size: 20px;
+  margin: 0 0 15px 0;
+}
+
+.movie-description-section p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.movie-trailer {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.trailer-link {
+  display: inline-block;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.trailer-link:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.edit-input,
+.edit-textarea {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 16px;
+  margin-bottom: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.edit-input::placeholder,
+.edit-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.edit-input:focus,
+.edit-textarea:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.edit-textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+}
+
+.edit-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.edit-input-small {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.edit-input-small::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.edit-input-small:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.movie-details-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.error-message {
+  background: rgba(220, 53, 69, 0.3);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .movie-details-content {
+    padding: 30px 20px;
+  }
+
+  .movie-details-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .movie-details-poster {
+    width: 200px;
+    height: 300px;
+  }
+
+  .movie-details-info h2 {
+    font-size: 24px;
+  }
+}
