@@ -64,7 +64,14 @@ export const MovieLibrary: React.FC<MovieLibraryProps> = ({ onClose, isAdmin = f
           <div className="loading">Загрузка фильмов...</div>
         ) : filteredMovies.length === 0 ? (
           <div className="no-movies">
-            <p>Фильмы не найдены</p>
+            <p><strong>Фильмы не найдены</strong></p>
+            {movies.length === 0 ? (
+              <p className="no-movies-hint">
+                В базе пока нет фильмов — из-за этого нельзя свайпить и сделать мэтч. Загрузите их: в терминале из корня проекта выполните <code>./импорт_csv.sh</code> (скрипт скачает IMDB Top 1000 и импортирует в БД). После этого здесь появятся фильмы и они будут в подборке для комнаты.
+              </p>
+            ) : (
+              <p>По вашему запросу ничего не найдено. Измените поиск.</p>
+            )}
           </div>
         ) : (
           <div className="movies-grid">

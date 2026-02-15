@@ -41,11 +41,16 @@ func (r *MovieRepository) Create(movie *models.Movie) error {
 		data, _ := json.Marshal(movie.StreamingURL)
 		streamingURL = data
 	}
+	if streamingURL == nil {
+		streamingURL = []byte("null") // JSONB требует валидный JSON или NULL через sql.Null*
+	}
 
 	var genre []byte
-	if movie.Genre != "" {
-		// Genre уже является JSON строкой, просто конвертируем в []byte
+	if movie.Genre != "" && json.Valid([]byte(movie.Genre)) {
 		genre = []byte(movie.Genre)
+	}
+	if genre == nil {
+		genre = []byte("[]") // всегда передаём валидный JSON для JSONB
 	}
 
 	err := r.db.QueryRow(
@@ -139,9 +144,15 @@ func (r *MovieRepository) Update(movie *models.Movie) error {
 	if movie.StreamingURL != "" {
 		streamingURL = []byte(movie.StreamingURL)
 	}
+	if streamingURL == nil {
+		streamingURL = []byte("null")
+	}
 	var genre []byte
-	if movie.Genre != "" {
+	if movie.Genre != "" && json.Valid([]byte(movie.Genre)) {
 		genre = []byte(movie.Genre)
+	}
+	if genre == nil {
+		genre = []byte("[]")
 	}
 
 	err := r.db.QueryRow(query,

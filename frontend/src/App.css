@@ -613,6 +613,14 @@ input:disabled {
   margin: 0;
 }
 
+.no-more-movies-sub code,
+.no-movies-empty code {
+  background: rgba(255,255,255,0.25);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.95em;
+}
+
 .no-more-movies-content,
 .no-more-movies-empty {
   width: 100%;

@@ -35,10 +35,11 @@ CREATE TABLE IF NOT EXISTS match_links (
 CREATE INDEX IF NOT EXISTS idx_match_links_match_id ON match_links(match_id);
 CREATE INDEX IF NOT EXISTS idx_match_links_platform ON match_links(platform);
 
--- Триггер для обновления updated_at в premieres
+-- Триггеры для обновления updated_at (DROP на случай повторного применения миграции)
+DROP TRIGGER IF EXISTS update_premieres_updated_at ON premieres;
 CREATE TRIGGER update_premieres_updated_at BEFORE UPDATE ON premieres
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Триггер для обновления updated_at в match_links
+DROP TRIGGER IF EXISTS update_match_links_updated_at ON match_links;
 CREATE TRIGGER update_match_links_updated_at BEFORE UPDATE ON match_links
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

@@ -168,6 +168,21 @@
   font-size: 18px;
 }
 
+.no-movies-hint {
+  max-width: 480px;
+  margin: 16px auto 0;
+  font-size: 15px;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+.no-movies-hint code {
+  background: rgba(255,255,255,0.2);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
 /* Scrollbar styling */
 .movies-grid::-webkit-scrollbar {
   width: 8px;

@@ -33,73 +33,60 @@ func NewMatchService(
 	}
 }
 
-// CheckAndCreateMatch проверяет, все ли участники комнаты лайкнули фильм, и создает матч
+// CheckAndCreateMatch проверяет, все ли участники комнаты лайкнули фильм (свайп вправо), и создаёт матч.
+// Алгоритм: матч = ровно один фильм, который лайкнули все участники комнаты. Один фильм — один матч.
 func (s *MatchService) CheckAndCreateMatch(roomID, movieID uuid.UUID) (*models.Match, error) {
-	// Получаем всех участников комнаты
 	members, err := s.roomRepo.GetMembers(roomID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get room members: %w", err)
 	}
-
 	if len(members) == 0 {
 		return nil, fmt.Errorf("room has no members")
 	}
 
-	// Проверяем количество лайков для этого фильма от разных пользователей
-	likeCount, err := s.swipeRepo.CountLikesByMovie(roomID, movieID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to count likes: %w", err)
-	}
-
-	// Проверяем, что каждый участник комнаты лайкнул этот фильм
-	// Для двух пользователей нужно минимум 2 лайка от разных пользователей
+	// Собираем уникальных пользователей, которые лайкнули этот фильм в этой комнате
 	uniqueUserLikes := make(map[uuid.UUID]bool)
 	allSwipes, err := s.swipeRepo.GetAllSwipesByMovie(roomID, movieID)
-	if err == nil {
-		for _, swipe := range allSwipes {
-			if swipe.Direction == models.SwipeDirectionRight {
-				uniqueUserLikes[swipe.UserID] = true
-			}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get swipes: %w", err)
+	}
+	for _, swipe := range allSwipes {
+		if swipe.Direction == models.SwipeDirectionRight {
+			uniqueUserLikes[swipe.UserID] = true
 		}
 	}
 
-	// Если все участники комнаты лайкнули фильм, создаем матч
-	if len(uniqueUserLikes) >= len(members) && likeCount >= len(members) {
-		// Проверяем, не существует ли уже такой матч
-		exists, err := s.matchRepo.Exists(roomID, movieID)
+	// Матч только если каждый участник комнаты лайкнул фильм
+	if len(uniqueUserLikes) < len(members) {
+		return nil, nil
+	}
+
+	// Проверяем, не создан ли уже матч по этому фильму в комнате (идемпотентность)
+	exists, err := s.matchRepo.Exists(roomID, movieID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check match existence: %w", err)
+	}
+	if exists {
+		matches, err := s.matchRepo.GetByRoomID(roomID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to check match existence: %w", err)
+			return nil, fmt.Errorf("failed to get matches: %w", err)
 		}
-
-		if exists {
-			// Матч уже существует, возвращаем его
-			matches, err := s.matchRepo.GetByRoomID(roomID)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get matches: %w", err)
-			}
-
-			for _, match := range matches {
-				if match.MovieID == movieID {
-					return &match, nil
-				}
+		for _, m := range matches {
+			if m.MovieID == movieID {
+				return &m, nil
 			}
 		}
-
-		// Создаем новый матч
-		match := &models.Match{
-			ID:      uuid.New(),
-			RoomID:  roomID,
-			MovieID: movieID,
-		}
-
-		if err := s.matchRepo.Create(match); err != nil {
-			return nil, fmt.Errorf("failed to create match: %w", err)
-		}
-
-		return match, nil
 	}
 
-	return nil, nil // Матч еще не создан
+	match := &models.Match{
+		ID:      uuid.New(),
+		RoomID:  roomID,
+		MovieID: movieID,
+	}
+	if err := s.matchRepo.Create(match); err != nil {
+		return nil, fmt.Errorf("failed to create match: %w", err)
+	}
+	return match, nil
 }
 
 // GetMatchWithDetails получает матч с полной информацией

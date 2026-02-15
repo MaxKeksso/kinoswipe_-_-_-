@@ -10,10 +10,23 @@ interface MatchLinksPageProps {
 export const MatchLinksPage: React.FC<MatchLinksPageProps> = ({ match, onClose }) => {
   const [links, setLinks] = useState<MatchLink[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailedMatch, setDetailedMatch] = useState<Match | null>(null);
 
-  const safeMatch = match && typeof match === 'object' && (match as Match).id ? (match as Match) : null;
+  const baseMatch = match && typeof match === 'object' && (match as Match).id ? (match as Match) : null;
+  const safeMatch = detailedMatch || baseMatch;
   const safeUsers = (safeMatch && Array.isArray(safeMatch.users)) ? safeMatch.users : [];
   const safeMovie = safeMatch?.movie && typeof safeMatch.movie === 'object' ? safeMatch.movie : null;
+
+  useEffect(() => {
+    if (!baseMatch?.id) return;
+    if (baseMatch.movie && typeof baseMatch.movie === 'object' && Array.isArray(baseMatch.users)) {
+      setDetailedMatch(null);
+      return;
+    }
+    apiService.getMatch(baseMatch.id).then((full) => {
+      setDetailedMatch(full);
+    }).catch(() => setDetailedMatch(null));
+  }, [baseMatch?.id]);
 
   useEffect(() => {
     if (safeMatch?.id) loadLinks();
@@ -73,10 +86,10 @@ export const MatchLinksPage: React.FC<MatchLinksPageProps> = ({ match, onClose }
         {/* Заголовок с анимацией */}
         <div className="match-celebration">
           <div className="match-title-animation">
-            <h1 className="match-title">ЭТО МЭТЧ!</h1>
+            <h1 className="match-title">У вас мэтч</h1>
             <div className="match-sparkles">✨ ✨ ✨</div>
           </div>
-          <p className="match-subtitle">Вы оба выбрали этот фильм!</p>
+          <p className="match-subtitle">Все выбрали этот фильм — ниже ссылки, где его посмотреть</p>
         </div>
 
         {/* Информация о людях */}
@@ -136,7 +149,7 @@ export const MatchLinksPage: React.FC<MatchLinksPageProps> = ({ match, onClose }
             </div>
           </div>
         )}
-        <h3>Где посмотреть:</h3>
+        <h3 className="watch-section-title">Где посмотреть</h3>
         {loading ? (
           <div className="loading">Загрузка ссылок...</div>
         ) : (Array.isArray(links) && links.length > 0) ? (

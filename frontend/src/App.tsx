@@ -22,7 +22,6 @@ const App: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [currentMovieIndex, setCurrentMovieIndex] = useState(0);
   const [matches, setMatches] = useState<Match[]>([]);
-  const [showMatchModal, setShowMatchModal] = useState(false);
   const [lastMatch, setLastMatch] = useState<Match | null>(null);
   const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
   const [premieres, setPremieres] = useState<Premiere[]>([]);
@@ -119,10 +118,7 @@ const App: React.FC = () => {
         return [match, ...prevMatches.filter((m): m is Match => !!m && !!(m as Match).id)];
       });
       // Автоматически показываем страницу со ссылками сразу после матча
-      setTimeout(() => {
-        setShowMatchModal(false);
-        setShowMatchLinks(true);
-      }, 500);
+      setTimeout(() => setShowMatchLinks(true), 500);
     },
     onError: (error) => {
       console.error('WebSocket error:', error);
@@ -1354,6 +1350,16 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {!loading && movies && movies.length === 0 && state === 'swiping' && (
+          <div className="no-more-movies no-movies-empty">
+            <div className="no-more-movies-header">
+              <h2>🎬 Пока нет фильмов для свайпов</h2>
+              <p className="no-more-movies-sub">Загрузите фильмы в базу: в терминале из корня проекта выполните <code>./импорт_csv.sh</code> — скрипт скачает IMDB Top 1000 и импортирует их. После этого обновите страницу или перезайдите в комнату.</p>
+            </div>
+            <button onClick={() => setShowMovieLibrary(true)} className="secondary-button">Открыть библиотеку</button>
+          </div>
+        )}
+
         {!loading && currentMovie && movies && movies.length > 0 && (
           <>
             <div className="cardContainer">
@@ -1544,7 +1550,6 @@ const App: React.FC = () => {
           match={lastMatch}
           onClose={() => {
             setShowMatchLinks(false);
-            setShowMatchModal(false);
             setLastMatch(null);
             // Продолжаем свайпить после закрытия страницы со ссылками
             if (movies && currentMovieIndex < movies.length - 1) {
@@ -1557,41 +1562,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Модальное окно матча - показывается только если страница со ссылками не открыта */}
-      {showMatchModal && lastMatch && !showMatchLinks && (
-        <div className="modal-overlay" onClick={() => setShowMatchModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowMatchModal(false)}>×</button>
-            <h2>🎉 Матч!</h2>
-            {lastMatch.movie && typeof lastMatch.movie === 'object' && (
-              <div className="match-movie">
-                <img
-                  src={lastMatch.movie.poster_url || ''}
-                  alt={lastMatch.movie.title || 'Постер'}
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(lastMatch.movie?.title || 'Фильм')}`;
-                  }}
-                />
-                <h3>{lastMatch.movie.title || 'Фильм'}</h3>
-                <p>Все участники лайкнули этот фильм!</p>
-              </div>
-            )}
-            <button 
-              onClick={() => {
-                setShowMatchModal(false);
-                setShowMatchLinks(true);
-              }} 
-              className="primary-button"
-            >
-              Где посмотреть?
-            </button>
-            <button onClick={() => setShowMatchModal(false)} className="secondary-button">
-              Продолжить свайпить
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

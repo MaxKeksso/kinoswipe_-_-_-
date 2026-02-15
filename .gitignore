@@ -40,6 +40,9 @@ logs/
 *.db
 *.sqlite
 
+# Downloaded data (импорт_csv.sh скачивает сам)
+imdb_top_1000.csv
+
 # OS
 .DS_Store
 Thumbs.db

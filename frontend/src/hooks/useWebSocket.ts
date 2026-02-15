@@ -60,9 +60,8 @@ export const useWebSocket = ({
           const data: WebSocketMessage = JSON.parse(raw);
           if (!data || typeof data !== 'object') return;
 
-          if (data.type === 'match' && data.payload && typeof data.payload === 'object') {
-            const matchNotification = data.payload as { type?: string; match?: unknown };
-            const match = matchNotification?.match;
+          if (data.type === 'match') {
+            const match = (data as { match?: unknown }).match;
             if (match && typeof match === 'object' && (match as { id?: string }).id) {
               onMatch?.(match);
             }
