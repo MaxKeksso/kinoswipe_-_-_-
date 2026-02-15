@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"strconv"
@@ -60,12 +61,29 @@ func Load() (*Config, error) {
 		Name:     getEnv("DB_NAME", "kinoswipe"),
 		SSLMode:  getEnv("DB_SSLMODE", "disable"),
 	}
-	// Если задан DATABASE_URL — используем его и парсим параметры
-	if u := os.Getenv("DATABASE_URL"); u != "" {
-		parsed, err := parseDatabaseURL(u)
+	// DATABASE_URL или альтернативы (Railway: DATABASE_URL, POSTGRES_URL и т.д.)
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		dbURL = os.Getenv("POSTGRES_URL")
+	}
+	if dbURL == "" {
+		dbURL = os.Getenv("POSTGRES_PRIVATE_URL")
+	}
+	onRailway := os.Getenv("PORT") != ""
+	if dbURL != "" {
+		parsed, err := parseDatabaseURL(dbURL)
 		if err == nil {
+			// На Railway нельзя подключаться к localhost — так приложение не видит облачную БД
+			h := strings.ToLower(strings.TrimSpace(parsed.Host))
+			if onRailway && (h == "localhost" || h == "127.0.0.1" || h == "::1" || strings.HasPrefix(h, "localhost")) {
+				log.Fatal("DATABASE_URL points to localhost. On Railway use Variables → + New Variable → Add Reference → PostgreSQL → DATABASE_URL. Do not paste a local URL. See RAILWAY_НАСТРОЙКА_БД.md")
+			}
 			dbConfig = parsed
 		}
+	}
+	// В облаке без корректного URL — явно падаем
+	if onRailway && (dbConfig.Host == "localhost" || dbConfig.Host == "127.0.0.1") {
+		log.Fatal("DATABASE_URL is missing or invalid. In Railway: Service → Variables → + New Variable → Add Reference → PostgreSQL → DATABASE_URL. See RAILWAY_НАСТРОЙКА_БД.md")
 	}
 
 	// PORT задаёт Railway/Render/Fly; SERVER_HOST 0.0.0.0 нужен для приёма снаружи
