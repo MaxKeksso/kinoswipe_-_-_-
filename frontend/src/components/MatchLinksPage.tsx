@@ -3,7 +3,7 @@ import { apiService, MatchLink, Match } from '../api/api';
 import './MatchLinksPage.css';
 
 interface MatchLinksPageProps {
-  match: Match;
+  match: Match | null | undefined;
   onClose: () => void;
 }
 
@@ -11,17 +11,23 @@ export const MatchLinksPage: React.FC<MatchLinksPageProps> = ({ match, onClose }
   const [links, setLinks] = useState<MatchLink[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const safeMatch = match && typeof match === 'object' && (match as Match).id ? (match as Match) : null;
+  const safeUsers = (safeMatch && Array.isArray(safeMatch.users)) ? safeMatch.users : [];
+  const safeMovie = safeMatch?.movie && typeof safeMatch.movie === 'object' ? safeMatch.movie : null;
+
   useEffect(() => {
-    loadLinks();
+    if (safeMatch?.id) loadLinks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [match.id]);
+  }, [safeMatch?.id]);
 
   const loadLinks = async () => {
+    if (!safeMatch?.id) return;
     try {
-      const matchLinks = await apiService.getMatchLinks(match.id);
-      setLinks(matchLinks);
+      const matchLinks = await apiService.getMatchLinks(safeMatch.id);
+      setLinks(Array.isArray(matchLinks) ? matchLinks : []);
     } catch (err) {
       console.error('Error loading match links:', err);
+      setLinks([]);
     } finally {
       setLoading(false);
     }
@@ -47,6 +53,18 @@ export const MatchLinksPage: React.FC<MatchLinksPageProps> = ({ match, onClose }
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  if (!safeMatch) {
+    return (
+      <div className="match-links-page">
+        <div className="match-links-content">
+          <button className="close-button" onClick={onClose}>×</button>
+          <p>Данные о матче недоступны.</p>
+          <button onClick={onClose} className="primary-button">Закрыть</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="match-links-page">
       <div className="match-links-content">
@@ -62,20 +80,20 @@ export const MatchLinksPage: React.FC<MatchLinksPageProps> = ({ match, onClose }
         </div>
 
         {/* Информация о людях */}
-        {match.users && match.users.length > 0 ? (
+        {safeUsers.length > 0 ? (
           <div className="match-users">
             <div className="users-avatars">
-              {match.users.slice(0, 2).map((user, index) => (
-                <div key={user.id} className="user-avatar" style={{ zIndex: match.users!.length - index }}>
+              {safeUsers.slice(0, 2).map((user, index) => (
+                <div key={user?.id || index} className="user-avatar" style={{ zIndex: safeUsers.length - index }}>
                   <div className="avatar-circle">
-                    {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                    {(user?.username && String(user.username).length > 0) ? String(user.username).charAt(0).toUpperCase() : 'U'}
                   </div>
-                  <span className="username">{user.username || 'Пользователь'}</span>
+                  <span className="username">{user?.username || 'Пользователь'}</span>
                 </div>
               ))}
-              {match.users.length > 2 && (
+              {safeUsers.length > 2 && (
                 <div className="user-avatar more-users">
-                  <div className="avatar-circle">+{match.users.length - 2}</div>
+                  <div className="avatar-circle">+{safeUsers.length - 2}</div>
                 </div>
               )}
             </div>
@@ -90,30 +108,30 @@ export const MatchLinksPage: React.FC<MatchLinksPageProps> = ({ match, onClose }
         )}
 
         {/* Информация о фильме */}
-        {match.movie && (
+        {safeMovie && (
           <div className="match-movie-info">
             <img
-              src={match.movie.poster_url}
-              alt={match.movie.title}
+              src={safeMovie.poster_url || ''}
+              alt={safeMovie.title || 'Постер'}
               className="match-movie-poster"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(match.movie!.title)}`;
+                target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(safeMovie?.title || 'Фильм')}`;
               }}
             />
             <div className="movie-details">
-              <h3>{match.movie.title}</h3>
-              {match.movie.year && (
-                <p className="movie-year">📅 {match.movie.year} год</p>
+              <h3>{safeMovie.title || 'Фильм'}</h3>
+              {safeMovie.year && (
+                <p className="movie-year">📅 {safeMovie.year} год</p>
               )}
-              {match.movie.kp_rating && (
+              {safeMovie.kp_rating != null && !Number.isNaN(Number(safeMovie.kp_rating)) && (
                 <div className="movie-rating">
                   <span className="rating-label">Кинопоиск:</span>
-                  <span className="rating-value">{match.movie.kp_rating.toFixed(1)}</span>
+                  <span className="rating-value">{Number(safeMovie.kp_rating).toFixed(1)}</span>
                 </div>
               )}
-              {match.movie.description && (
-                <p className="movie-description">{match.movie.description.substring(0, 150)}...</p>
+              {safeMovie.description != null && String(safeMovie.description).trim() !== '' && (
+                <p className="movie-description">{String(safeMovie.description).substring(0, 150)}{String(safeMovie.description).length > 150 ? '...' : ''}</p>
               )}
             </div>
           </div>
@@ -121,9 +139,9 @@ export const MatchLinksPage: React.FC<MatchLinksPageProps> = ({ match, onClose }
         <h3>Где посмотреть:</h3>
         {loading ? (
           <div className="loading">Загрузка ссылок...</div>
-        ) : links.length > 0 ? (
+        ) : (Array.isArray(links) && links.length > 0) ? (
           <div className="links-grid">
-            {links.map((link) => (
+            {(links || []).map((link) => (
               <div
                 key={link.id}
                 className="link-card"
@@ -145,7 +163,7 @@ export const MatchLinksPage: React.FC<MatchLinksPageProps> = ({ match, onClose }
             <div className="default-links-hint">
               <p>Вы можете найти этот фильм на:</p>
               <div className="default-links">
-                <a href={`https://www.kinopoisk.ru/film/${match.movie?.id || ''}`} target="_blank" rel="noopener noreferrer" className="default-link">
+                <a href={`https://www.kinopoisk.ru/film/${safeMovie?.id || safeMatch?.movie_id || ''}`} target="_blank" rel="noopener noreferrer" className="default-link">
                   🎬 Кинопоиск
                 </a>
                 <a href="https://start.ru" target="_blank" rel="noopener noreferrer" className="default-link">

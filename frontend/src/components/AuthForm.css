@@ -1,7 +1,12 @@
 .auth-form-container {
-  max-width: 400px;
+  max-width: 420px;
   width: 100%;
   margin: 0 auto;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
 }
 
 .auth-tabs {
@@ -68,4 +73,23 @@
 
 .link-button:hover {
   color: rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 480px) {
+  .auth-form-container {
+    padding: 24px 20px;
+    margin: 0 10px;
+    border-radius: 20px;
+  }
+
+  .auth-tab {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .auth-form input,
+  .auth-form button {
+    min-height: 48px;
+    font-size: 16px;
+  }
 }

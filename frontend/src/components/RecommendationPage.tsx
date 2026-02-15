@@ -77,7 +77,8 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({
         console.error('Error loading all movies:', err);
         allMovies = [];
       }
-      
+      if (!Array.isArray(allMovies)) allMovies = [];
+
       // Если фильмов нет, возвращаем пустой список
       if (allMovies.length === 0) {
         setRecommendedMovies([]);
@@ -101,7 +102,7 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({
 
       // Фильтруем по жанрам пользователя
       const filteredByGenre = notSwipedMovies.filter(movie => {
-        if (!movie.genre || userGenres.length === 0) return false;
+        if (!movie.genre || (userGenres || []).length === 0) return false;
         
         try {
           let movieGenres: any = movie.genre;
@@ -190,9 +191,9 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({
         <div className="recommendation-header">
           <h2>🎯 Рекомендации для вас</h2>
           <p>Фильмы на основе ваших предпочтений по жанрам</p>
-          {userGenres.length > 0 && (
+          {(userGenres || []).length > 0 && (
             <div className="selected-genres">
-              {userGenres.map(genre => (
+              {(userGenres || []).map(genre => (
                 <span key={genre} className="genre-badge">
                   {GENRE_MAP[genre]?.[0] || genre}
                 </span>
@@ -203,7 +204,7 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({
 
         {loading ? (
           <div className="loading">Загрузка рекомендаций...</div>
-        ) : recommendedMovies.length === 0 ? (
+        ) : (recommendedMovies || []).length === 0 ? (
           <div className="no-recommendations">
             <p>К сожалению, не найдено фильмов по вашим предпочтениям.</p>
             <button onClick={onClose} className="primary-button">
@@ -212,7 +213,7 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({
           </div>
         ) : (
           <div className="recommendations-grid">
-            {recommendedMovies.map((movie) => (
+            {(recommendedMovies || []).map((movie) => (
               <div 
                 key={movie.id} 
                 className={`recommendation-card ${selectedMovie?.id === movie.id ? 'selected' : ''}`}

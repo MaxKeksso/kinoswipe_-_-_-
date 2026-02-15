@@ -8,7 +8,8 @@ interface PremiereSidebarProps {
 }
 
 export const PremiereSidebar: React.FC<PremiereSidebarProps> = ({ premieres, position }) => {
-  const filteredPremieres = premieres.filter(p => p.position === position && p.is_active);
+  const list = Array.isArray(premieres) ? premieres : [];
+  const filteredPremieres = list.filter(p => p.position === position && p.is_active);
 
   if (filteredPremieres.length === 0) {
     return null;

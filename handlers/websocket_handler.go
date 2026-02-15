@@ -249,8 +249,18 @@ func (c *Client) writePump() {
 }
 
 func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			log.Printf("WebSocket handler panic (room=%s): %v", r.URL.Path, rec)
+		}
+	}()
 	vars := mux.Vars(r)
-	roomID, err := uuid.Parse(vars["room_id"])
+	roomIDStr := vars["room_id"]
+	if roomIDStr == "" {
+		respondWithError(w, http.StatusBadRequest, "Room ID required")
+		return
+	}
+	roomID, err := uuid.Parse(roomIDStr)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid room ID")
 		return
@@ -274,7 +284,8 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("WebSocket upgrade error: %v", err)
+		log.Printf("WebSocket upgrade error (room=%s): %v", roomIDStr, err)
+		// Upgrade может уже отправить ответ — не пишем в w повторно
 		return
 	}
 

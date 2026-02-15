@@ -210,7 +210,8 @@ export const apiService = {
   // Матчи
   getRoomMatches: async (roomId: string): Promise<Match[]> => {
     const response = await api.get<Match[]>(`/rooms/${roomId}/matches`);
-    return response.data;
+    const data = response.data;
+    return Array.isArray(data) ? data : [];
   },
 
   getMatch: async (id: string): Promise<Match> => {
@@ -253,7 +254,8 @@ export const apiService = {
   // Ссылки для матчей
   getMatchLinks: async (matchId: string): Promise<MatchLink[]> => {
     const response = await api.get<MatchLink[]>(`/matches/${matchId}/links`);
-    return response.data;
+    const data = response.data;
+    return Array.isArray(data) ? data : [];
   },
 
   createMatchLink: async (matchId: string, link: Partial<MatchLink>): Promise<MatchLink> => {

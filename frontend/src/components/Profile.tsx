@@ -56,9 +56,9 @@ export const Profile: React.FC<ProfileProps> = ({ user, onClose }) => {
 
         <div className="profile-section">
           <h3>🎬 Мои предпочтения по жанрам</h3>
-          {userGenres.length > 0 ? (
+          {(userGenres || []).length > 0 ? (
             <div className="genres-grid">
-              {userGenres.map((genre) => (
+              {(userGenres || []).map((genre) => (
                 <div key={genre} className="genre-card">
                   <span className="genre-icon">{GENRE_MAP[genre]?.split(' ')[0] || '🎬'}</span>
                   <span className="genre-name">{GENRE_MAP[genre]?.split(' ').slice(1).join(' ') || genre}</span>
@@ -85,7 +85,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onClose }) => {
               <div className="stat-label">Просмотрено фильмов</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value">{userGenres.length}</div>
+              <div className="stat-value">{(userGenres || []).length}</div>
               <div className="stat-label">Выбранных жанров</div>
             </div>
           </div>

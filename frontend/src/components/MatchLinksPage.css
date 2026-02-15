@@ -251,8 +251,9 @@
 .match-links-content > h3 {
   color: white;
   text-align: center;
-  margin-bottom: 20px;
-  font-size: 20px;
+  margin: 28px 0 20px 0;
+  font-size: 1.35rem;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
 .links-grid {
@@ -341,18 +342,20 @@
 
 .default-link {
   display: inline-block;
-  padding: 12px 20px;
-  background: rgba(255, 255, 255, 0.15);
+  padding: 14px 22px;
+  background: rgba(255, 255, 255, 0.2);
   color: white;
   text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  font-weight: 500;
+  border-radius: 12px;
+  transition: all 0.25s ease;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .default-link:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .loading {
@@ -362,8 +365,27 @@
 }
 
 @media (max-width: 768px) {
+  .match-links-page {
+    padding: 12px 10px;
+    align-items: flex-start;
+  }
+
   .match-links-content {
-    padding: 30px 20px;
+    padding: 24px 20px;
+    max-width: 100%;
+    border-radius: 20px;
+  }
+
+  .match-title {
+    font-size: 2rem;
+  }
+
+  .close-button {
+    width: 44px;
+    height: 44px;
+    font-size: 28px;
+    top: 12px;
+    right: 12px;
   }
 
   .match-movie-info {
@@ -373,21 +395,53 @@
   }
 
   .match-movie-poster {
-    width: 150px;
-    height: 225px;
+    width: 140px;
+    height: 210px;
+  }
+
+  .movie-details h3 {
+    font-size: 1.15rem;
   }
 
   .users-avatars {
-    gap: 15px;
+    gap: 12px;
   }
 
   .avatar-circle {
-    width: 50px;
-    height: 50px;
-    font-size: 20px;
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
   }
 
   .links-grid {
     grid-template-columns: 1fr;
+  }
+
+  .link-card {
+    min-height: 56px;
+    padding: 16px 18px;
+  }
+
+  .default-link {
+    padding: 14px 18px;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .match-title {
+    font-size: 1.65rem;
+  }
+
+  .match-links-content {
+    padding: 20px 16px;
+  }
+
+  .match-movie-poster {
+    width: 120px;
+    height: 180px;
   }
 }

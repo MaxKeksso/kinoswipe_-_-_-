@@ -29,26 +29,20 @@ export const useWebSocket = ({
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // WebSocket URL - для работы через nginx прокси используем текущий хост
-  // nginx проксирует WebSocket запросы на backend
-  const getWebSocketURL = () => {
+  const getWebSocketURL = (rid: string, uid: string) => {
+    if (!rid || !uid) return '';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.hostname;
-    // Если порт не указан, используем стандартные (80 для ws, 443 для wss)
     let port = window.location.port;
-    if (!port) {
-      port = window.location.protocol === 'https:' ? '443' : '80';
-    }
-    // Убираем порт для стандартных портов, чтобы избежать проблем
+    if (!port) port = window.location.protocol === 'https:' ? '443' : '80';
     const hostPort = (port === '80' || port === '443') ? host : `${host}:${port}`;
-    return `${protocol}//${hostPort}/api/v1/rooms/${roomId}/ws?user_id=${userId}`;
+    return `${protocol}//${hostPort}/api/v1/rooms/${rid}/ws?user_id=${encodeURIComponent(uid)}`;
   };
-  const wsUrl = getWebSocketURL();
 
   const connect = () => {
-    // Не подключаемся, если нет roomId или userId, или если отключено
-    if (!roomId || !userId || !enabled) {
-      return;
-    }
+    if (!roomId || !userId || !enabled) return;
+    const wsUrl = getWebSocketURL(roomId, userId);
+    if (!wsUrl) return;
     try {
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
@@ -61,16 +55,19 @@ export const useWebSocket = ({
 
       ws.onmessage = (event) => {
         try {
-          const data: WebSocketMessage = JSON.parse(event.data);
-          
-          if (data.type === 'match' && data.payload) {
-            // Обработка уведомления о матче
-            const matchNotification = data.payload as any;
-            if (matchNotification.type === 'match' && matchNotification.match) {
-              onMatch?.(matchNotification.match);
+          const raw = typeof event.data === 'string' ? event.data : '';
+          if (!raw) return;
+          const data: WebSocketMessage = JSON.parse(raw);
+          if (!data || typeof data !== 'object') return;
+
+          if (data.type === 'match' && data.payload && typeof data.payload === 'object') {
+            const matchNotification = data.payload as { type?: string; match?: unknown };
+            const match = matchNotification?.match;
+            if (match && typeof match === 'object' && (match as { id?: string }).id) {
+              onMatch?.(match);
             }
           }
-          
+
           onMessage?.(data);
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
