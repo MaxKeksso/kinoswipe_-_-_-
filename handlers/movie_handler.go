@@ -37,7 +37,9 @@ func (h *MovieHandler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Failed to get movies")
 		return
 	}
-
+	if movies == nil {
+		movies = []models.Movie{}
+	}
 	respondWithJSON(w, http.StatusOK, movies)
 }
 
