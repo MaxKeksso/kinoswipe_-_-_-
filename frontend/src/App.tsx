@@ -59,11 +59,11 @@ const App: React.FC = () => {
     const savedUserId = localStorage.getItem('userId');
     const savedUsername = localStorage.getItem('username');
     
-    // Загружаем жанры пользователя
     const savedGenres = localStorage.getItem('userGenres');
     if (savedGenres) {
       try {
-        setUserGenres(JSON.parse(savedGenres));
+        const parsed = JSON.parse(savedGenres);
+        setUserGenres(Array.isArray(parsed) ? parsed : []);
       } catch (e) {
         console.error('Error parsing saved genres:', e);
       }
@@ -84,7 +84,8 @@ const App: React.FC = () => {
             const userSavedGenres = localStorage.getItem(userGenresKey) || savedGenres;
             if (userSavedGenres) {
               try {
-                setUserGenres(JSON.parse(userSavedGenres));
+                const parsed = JSON.parse(userSavedGenres);
+                setUserGenres(Array.isArray(parsed) ? parsed : []);
                 setState('room-selection');
               } catch {
                 setState('genre-questionnaire');
@@ -109,12 +110,13 @@ const App: React.FC = () => {
   useWebSocket({
     roomId: room?.id || '',
     userId: user?.id || '',
-    onMatch: (match: Match) => {
+      onMatch: (match: Match) => {
+      if (!match || !(match as { id?: string }).id) return;
       console.log('Match received:', match);
       setLastMatch(match);
       setMatches((prev) => {
-        const prevMatches = prev || [];
-        return [match, ...prevMatches];
+        const prevMatches = Array.isArray(prev) ? prev : [];
+        return [match, ...prevMatches.filter((m): m is Match => !!m && !!(m as Match).id)];
       });
       // Автоматически показываем страницу со ссылками сразу после матча
       setTimeout(() => {
@@ -230,6 +232,14 @@ const App: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.id, room?.status, state]); // Используем room?.id и room?.status для правильного отслеживания изменений
+
+  // Когда все фильмы просмотрены — подгружаем актуальные матчи
+  useEffect(() => {
+    if (room && movies && movies.length > 0 && currentMovieIndex >= movies.length && !showMatchLinks) {
+      loadMatches();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMovieIndex, movies?.length, room?.id, showMatchLinks]);
 
   const loadAvailableRooms = async () => {
     try {
@@ -493,12 +503,16 @@ const App: React.FC = () => {
     return createdMovies;
   };
 
+  const safeMatchList = (arr: unknown): Match[] => {
+    if (!Array.isArray(arr)) return [];
+    return arr.filter((m): m is Match => !!m && typeof m === 'object' && !!(m as Match).id);
+  };
+
   const loadMatches = async () => {
     if (!room) return;
-    
     try {
       const roomMatches = await apiService.getRoomMatches(room.id);
-      setMatches(roomMatches || []);
+      setMatches(safeMatchList(roomMatches));
     } catch (err) {
       console.error('Error loading matches:', err);
       setMatches([]);
@@ -527,7 +541,8 @@ const App: React.FC = () => {
         const savedGenres = localStorage.getItem(userGenresKey);
         if (savedGenres) {
           try {
-            setUserGenres(JSON.parse(savedGenres));
+            const parsed = JSON.parse(savedGenres);
+            setUserGenres(Array.isArray(parsed) ? parsed : []);
             setState('room-selection');
           } catch {
             setState('genre-questionnaire');
@@ -719,20 +734,21 @@ const App: React.FC = () => {
     try {
       const result = await apiService.createSwipe(room.id, movie.id, direction);
       
-      // Проверяем, есть ли матч в ответе
-      if (typeof result === 'object' && 'match' in result && result.match) {
-        const matchData = result.match as Match;
+      // Проверяем, есть ли матч в ответе (защита от неожиданного формата API)
+      const rawMatch = typeof result === 'object' && result !== null && 'match' in result ? (result as { match?: Match }).match : null;
+      if (rawMatch && typeof rawMatch === 'object' && rawMatch.id) {
+        const matchData: Match = {
+          id: rawMatch.id,
+          room_id: rawMatch.room_id,
+          movie_id: rawMatch.movie_id,
+          created_at: rawMatch.created_at,
+          movie: rawMatch.movie ?? undefined,
+          users: Array.isArray(rawMatch.users) ? rawMatch.users : undefined,
+        };
         setLastMatch(matchData);
-        setMatches((prev) => {
-          const prevMatches = prev || [];
-          return [matchData, ...prevMatches];
-        });
-        // Автоматически показываем страницу со ссылками при матче
-        setTimeout(() => {
-          setShowMatchLinks(true);
-        }, 500);
-        // Не переходим к следующему фильму сразу - ждем закрытия страницы со ссылками
-        return; // Выходим из функции, не переходим к следующему фильму
+        setMatches((prev) => [matchData, ...safeMatchList(prev)]);
+        setTimeout(() => setShowMatchLinks(true), 500);
+        return;
       }
 
       // Переходим к следующему фильму только если нет матча
@@ -743,17 +759,22 @@ const App: React.FC = () => {
         if (room) {
           try {
             const updatedMatches = await apiService.getRoomMatches(room.id);
-            if (updatedMatches && updatedMatches.length > 0) {
-              setMatches(updatedMatches);
-              // Показываем первый матч с анимацией "ЭТО МЭТЧ!"
+            const matchList = safeMatchList(updatedMatches);
+            if (matchList.length > 0) {
+              setMatches(matchList);
               setTimeout(() => {
-                setLastMatch(updatedMatches[0]);
+                setLastMatch(matchList[0]);
                 setShowMatchLinks(true);
               }, 500);
             } else {
-              // Нет матчей - показываем рекомендации на основе жанров
               const savedGenres = localStorage.getItem('userGenres');
-              const genres = savedGenres ? JSON.parse(savedGenres) : [];
+              let genres: string[] = [];
+              if (savedGenres) {
+                try {
+                  const parsed = JSON.parse(savedGenres);
+                  genres = Array.isArray(parsed) ? parsed : [];
+                } catch { /* ignore */ }
+              }
               if (genres.length > 0 && room) {
                 setTimeout(() => {
                   setUserGenres(genres);
@@ -765,10 +786,10 @@ const App: React.FC = () => {
             }
           } catch (err) {
             console.error('Error loading matches:', err);
-            // Если не удалось загрузить матчи, проверяем существующие
-            if (matches && matches.length > 0) {
+            const fallback = safeMatchList(matches);
+            if (fallback.length > 0) {
               setTimeout(() => {
-                setLastMatch(matches[0]);
+                setLastMatch(fallback[0]);
                 setShowMatchLinks(true);
               }, 500);
             } else {
@@ -778,27 +799,29 @@ const App: React.FC = () => {
         }
       }
     } catch (err: any) {
-      // Игнорируем ошибку "Already swiped" - просто переходим к следующему фильму
       if (err.response?.status === 409 && err.response?.data?.error?.includes('Already swiped')) {
-        console.log('Фильм уже свайпнут, переходим к следующему');
         if (movies && currentMovieIndex < movies.length - 1) {
           setCurrentMovieIndex(currentMovieIndex + 1);
         } else {
-          // Фильмы закончились - загружаем актуальные матчи и проверяем
           if (room) {
             try {
               const updatedMatches = await apiService.getRoomMatches(room.id);
-              if (updatedMatches && updatedMatches.length > 0) {
-                setMatches(updatedMatches);
-                // Показываем первый матч с анимацией "ЭТО МЭТЧ!"
+              const matchList = safeMatchList(updatedMatches);
+              if (matchList.length > 0) {
+                setMatches(matchList);
                 setTimeout(() => {
-                  setLastMatch(updatedMatches[0]);
+                  setLastMatch(matchList[0]);
                   setShowMatchLinks(true);
                 }, 500);
               } else {
-                // Нет матчей - показываем рекомендации
                 const savedGenres = localStorage.getItem('userGenres');
-                const genres = savedGenres ? JSON.parse(savedGenres) : [];
+                let genres: string[] = [];
+                if (savedGenres) {
+                  try {
+                    const parsed = JSON.parse(savedGenres);
+                    genres = Array.isArray(parsed) ? parsed : [];
+                  } catch { /* ignore */ }
+                }
                 if (genres.length > 0 && room) {
                   setUserGenres(genres);
                   setShowRecommendations(true);
@@ -808,10 +831,10 @@ const App: React.FC = () => {
               }
             } catch (matchErr) {
               console.error('Error loading matches:', matchErr);
-              // Если не удалось загрузить матчи, проверяем существующие
-              if (matches && matches.length > 0) {
+              const fallback = safeMatchList(matches);
+              if (fallback.length > 0) {
                 setTimeout(() => {
-                  setLastMatch(matches[0]);
+                  setLastMatch(fallback[0]);
                   setShowMatchLinks(true);
                 }, 500);
               } else {
@@ -821,7 +844,8 @@ const App: React.FC = () => {
           }
         }
       } else {
-        setError(err.response?.data?.error || 'Ошибка свайпа');
+        const errMsg = err?.response?.data?.error || err?.message || 'Ошибка свайпа';
+        setError(typeof errMsg === 'string' ? errMsg : 'Ошибка свайпа');
       }
     } finally {
       setLoading(false);
@@ -835,7 +859,13 @@ const App: React.FC = () => {
       return;
     }
     const savedGenres = localStorage.getItem('userGenres');
-    const genres = savedGenres ? JSON.parse(savedGenres) : [];
+    let genres: string[] = [];
+    if (savedGenres) {
+      try {
+        const parsed = JSON.parse(savedGenres);
+        genres = Array.isArray(parsed) ? parsed : [];
+      } catch { /* ignore */ }
+    }
     if (genres.length > 0) {
       setUserGenres(genres);
       setShowRecommendations(true);
@@ -914,55 +944,43 @@ const App: React.FC = () => {
 
   // Рендер экрана выбора комнаты
   if (state === 'room-selection') {
-    const leftPremieres = premieres.filter(p => p.position === 'left' && p.is_active);
-    const rightPremieres = premieres.filter(p => p.position === 'right' && p.is_active);
-    // Получаем жанры пользователя (сначала по userId, потом общий ключ)
+    const premieresList = Array.isArray(premieres) ? premieres : [];
+    const leftPremieres = premieresList.filter(p => p.position === 'left' && p.is_active);
+    const rightPremieres = premieresList.filter(p => p.position === 'right' && p.is_active);
+    // Получаем жанры пользователя (JSON.parse может вернуть null — всегда приводим к массиву)
     let genres: string[] = [];
+    const safeParseGenres = (raw: string | null): string[] => {
+      if (!raw) return [];
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    };
     if (user?.id) {
       const userGenresKey = `userGenres_${user.id}`;
-      const userSavedGenres = localStorage.getItem(userGenresKey);
-      if (userSavedGenres) {
-        try {
-          genres = JSON.parse(userSavedGenres);
-        } catch {
-          const savedGenres = localStorage.getItem('userGenres');
-          if (savedGenres) {
-            try {
-              genres = JSON.parse(savedGenres);
-            } catch {}
-          }
-        }
-      } else {
-        const savedGenres = localStorage.getItem('userGenres');
-        if (savedGenres) {
-          try {
-            genres = JSON.parse(savedGenres);
-          } catch {}
-        }
-      }
+      genres = safeParseGenres(localStorage.getItem(userGenresKey));
+      if (genres.length === 0) genres = safeParseGenres(localStorage.getItem('userGenres'));
     } else {
-      const savedGenres = localStorage.getItem('userGenres');
-      if (savedGenres) {
-        try {
-          genres = JSON.parse(savedGenres);
-        } catch {}
-      }
+      genres = safeParseGenres(localStorage.getItem('userGenres'));
     }
-    
+    genres = Array.isArray(genres) ? genres : [];
+
     return (
       <div className="App">
-        {leftPremieres.length > 0 && <PremiereSidebar premieres={premieres} position="left" />}
-        {rightPremieres.length > 0 && <PremiereSidebar premieres={premieres} position="right" />}
+        {leftPremieres.length > 0 && <PremiereSidebar premieres={premieresList} position="left" />}
+        {rightPremieres.length > 0 && <PremiereSidebar premieres={premieresList} position="right" />}
         <div className={`room-selection-container ${leftPremieres.length > 0 ? 'with-left-sidebar' : ''} ${rightPremieres.length > 0 ? 'with-right-sidebar' : ''}`}>
           <div className="header">
             <div>
               <h1>🎬 Привет, {user?.username}! 👋</h1>
               <p className="welcome-message">Выбери фильмы вместе с друзьями! Создай комнату или присоединись к существующей.</p>
-              {genres.length > 0 && (
+              {(genres || []).length > 0 && (
                 <div className="user-preferences">
                   <span className="preferences-label">Ваши предпочтения:</span>
                   <div className="preferences-tags">
-                    {genres.slice(0, 5).map((genre: string) => (
+                    {(genres || []).slice(0, 5).map((genre: string) => (
                       <span key={genre} className="preference-tag">
                         {genre === 'action' ? '💥 Боевик' :
                          genre === 'comedy' ? '😂 Комедия' :
@@ -981,7 +999,7 @@ const App: React.FC = () => {
                          genre === 'war' ? '⚔️ Военное' : genre}
                       </span>
                     ))}
-                    {genres.length > 5 && <span className="preference-tag">+{genres.length - 5}</span>}
+                    {(genres || []).length > 5 && <span className="preference-tag">+{(genres || []).length - 5}</span>}
                   </div>
                 </div>
               )}
@@ -1029,11 +1047,11 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {availableRooms && availableRooms.length > 0 && (
+          {(availableRooms || []).length > 0 && (
             <div className="available-rooms-section">
               <h2>🌟 Активные комнаты</h2>
               <div className="rooms-grid">
-                {availableRooms.map((r) => (
+                {(availableRooms || []).map((r) => (
                   <div key={r.id} className="room-card">
                     <div className="room-card-header">
                       <span className="room-code-badge">{r.code}</span>
@@ -1132,7 +1150,7 @@ const App: React.FC = () => {
             <h1>🎬 Комната: {room.code}</h1>
             <p className="waiting-message">Ожидание участников...</p>
             <div className="invite-section">
-              <p className="invite-hint">Второй человек должен открыть приложение <strong>на другом устройстве</strong> (телефон или другой компьютер в той же Wi‑Fi сети).</p>
+              <p className="invite-hint">Второй человек открывает приложение <strong>на другом устройстве</strong> и переходит по ссылке ниже (или вводит код комнаты).</p>
               <div className="invite-code-block">
                 <span className="invite-code-label">Код комнаты:</span>
                 <span className="invite-code-value">{room.code}</span>
@@ -1149,67 +1167,91 @@ const App: React.FC = () => {
                   {roomCodeCopied ? '✓ Код скопирован' : '📋 Скопировать код'}
                 </button>
               </div>
-              <div className="invite-ip-block">
-                <p className="invite-ip-explanation">
-                  <strong>Нужен IP именно этого компьютера</strong> — того, на котором ты сейчас создал комнату (где открыт этот браузер). Другой человек с телефона/ноутбука откроет ссылку и попадёт на твой компьютер.
-                </p>
-                <div className="invite-ip-row">
-                <label className="invite-ip-label">IP этого ПК или ссылка для интернета (ngrok):</label>
-                <input
-                  type="text"
-                  placeholder="192.168.1.5 или https://xxx.ngrok.io"
-                    value={inviteIP}
-                    onChange={(e) => setInviteIP(e.target.value.trim())}
-                    className="input-field invite-ip-input"
-                  />
-                  <button
-                    type="button"
-                    className="primary-button copy-invite-btn"
-                    disabled={!inviteIP}
-                    onClick={() => {
-                      const raw = inviteIP.trim();
-                      let url: string;
-                      if (/^https?:\/\//i.test(raw)) {
-                        const base = raw.replace(/\?.*$/, '').replace(/:3000\/?$/, '').replace(/:3000$/, '');
-                        url = base + (base.includes('?') ? '&' : '?') + `code=${room.code}`;
-                      } else {
-                        const host = raw.replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
-                        const isNgrok = /ngrok-free\.(dev|app)|\.ngrok\.io$/i.test(host);
-                        url = isNgrok
-                          ? `https://${host}?code=${room.code}`
-                          : `http://${host}:3000?code=${room.code}`;
-                      }
-                      navigator.clipboard.writeText(url).then(() => {
-                        setInviteLinkCopied(true);
-                        setTimeout(() => setInviteLinkCopied(false), 2500);
-                      }).catch(() => setError('Не удалось скопировать'));
-                    }}
-                  >
-                    {inviteLinkCopied ? '✓ Ссылка скопирована' : '📋 Скопировать ссылку для другого устройства'}
-                  </button>
-                </div>
-                <div className="invite-howto">
-                  <strong>Локальная сеть:</strong> введи IP (Mac: Системные настройки → Сеть; Windows: <code>ipconfig</code>).<br />
-                  <strong>Через интернет:</strong> установи <a href="https://ngrok.com" target="_blank" rel="noopener noreferrer">ngrok</a>, в терминале запусти <code>ngrok http 3000</code>, скопируй выданную ссылку (например https://abc123.ngrok.io) и вставь сюда — тогда второй человек сможет зайти по ней из любой сети.
-                </div>
-              </div>
-              <button
-                type="button"
-                className="secondary-button copy-invite-btn"
-                onClick={() => {
-                  const url = `${window.location.origin}${window.location.pathname || ''}?code=${room.code}`;
-                  navigator.clipboard.writeText(url).then(() => {
-                    setInviteLinkCopied(true);
-                    setTimeout(() => setInviteLinkCopied(false), 2500);
-                  }).catch(() => setError('Не удалось скопировать'));
-                }}
-              >
-                📋 Ссылка для этого компьютера (localhost)
-              </button>
+              {(() => {
+                const isPublicSite = typeof window !== 'undefined' && window.location.origin && !/^https?:\/\/localhost(:\d+)?$/i.test(window.location.origin);
+                const inviteUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname || ''}?code=${room.code}` : '';
+                return (
+                  <>
+                    {isPublicSite && (
+                      <div className="invite-public-block">
+                        <p className="invite-public-hint">Приложение открыто по публичной ссылке — отправь эту ссылку другу. VPN и ngrok не нужны.</p>
+                        <button
+                          type="button"
+                          className="primary-button copy-invite-btn"
+                          onClick={() => {
+                            navigator.clipboard.writeText(inviteUrl).then(() => {
+                              setInviteLinkCopied(true);
+                              setTimeout(() => setInviteLinkCopied(false), 2500);
+                            }).catch(() => setError('Не удалось скопировать'));
+                          }}
+                        >
+                          {inviteLinkCopied ? '✓ Ссылка скопирована' : '📋 Скопировать ссылку приглашения'}
+                        </button>
+                        <span className="invite-url-preview">{inviteUrl}</span>
+                      </div>
+                    )}
+                    {!isPublicSite && (
+                      <div className="invite-ip-block">
+                        <p className="invite-ip-explanation">
+                          <strong>Локальный запуск.</strong> Нужен IP этого ПК или ссылка ngrok, чтобы другой человек мог зайти.
+                        </p>
+                        <div className="invite-ip-row">
+                          <label className="invite-ip-label">IP или ссылка (например https://xxx.ngrok.io):</label>
+                          <input
+                            type="text"
+                            placeholder="192.168.1.5 или https://xxx.ngrok.io"
+                            value={inviteIP}
+                            onChange={(e) => setInviteIP(e.target.value.trim())}
+                            className="input-field invite-ip-input"
+                          />
+                          <button
+                            type="button"
+                            className="primary-button copy-invite-btn"
+                            disabled={!inviteIP}
+                            onClick={() => {
+                              const raw = inviteIP.trim();
+                              let url: string;
+                              if (/^https?:\/\//i.test(raw)) {
+                                const base = raw.replace(/\?.*$/, '').replace(/:3000\/?$/, '').replace(/:3000$/, '');
+                                url = base + (base.includes('?') ? '&' : '?') + `code=${room.code}`;
+                              } else {
+                                const host = raw.replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
+                                const isNgrok = /ngrok-free\.(dev|app)|\.ngrok\.io$/i.test(host);
+                                url = isNgrok ? `https://${host}?code=${room.code}` : `http://${host}:3000?code=${room.code}`;
+                              }
+                              navigator.clipboard.writeText(url).then(() => {
+                                setInviteLinkCopied(true);
+                                setTimeout(() => setInviteLinkCopied(false), 2500);
+                              }).catch(() => setError('Не удалось скопировать'));
+                            }}
+                          >
+                            {inviteLinkCopied ? '✓ Ссылка скопирована' : '📋 Скопировать ссылку'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {!isPublicSite && (
+                      <button
+                        type="button"
+                        className="secondary-button copy-invite-btn"
+                        onClick={() => {
+                          const url = `${window.location.origin}${window.location.pathname || ''}?code=${room.code}`;
+                          navigator.clipboard.writeText(url).then(() => {
+                            setInviteLinkCopied(true);
+                            setTimeout(() => setInviteLinkCopied(false), 2500);
+                          }).catch(() => setError('Не удалось скопировать'));
+                        }}
+                      >
+                        📋 Ссылка для этого компьютера (localhost)
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
             <div className="members-list">
               <div className="members-list-header">
-                <h2>Участники ({roomMembers.length})</h2>
+                <h2>Участники ({(roomMembers || []).length})</h2>
                 <button
                   type="button"
                   className="secondary-button refresh-members-btn"
@@ -1223,7 +1265,7 @@ const App: React.FC = () => {
                   👋 Кто-то подключился! Список обновлён.
                 </div>
               )}
-              {roomMembers.length === 0 && (
+              {(roomMembers || []).length === 0 && (
                 <p className="members-empty-hint">
                   Список пустой. Нажмите «Обновить список» ниже — вы должны увидеть себя и других участников.
                 </p>
@@ -1232,7 +1274,7 @@ const App: React.FC = () => {
                 Список обновляется автоматически (каждую секунду)
               </p>
               <div className="members-grid">
-                {roomMembers.map((member) => (
+                {(roomMembers || []).map((member) => (
                   <div key={member.id} className="member-card">
                     <div className="member-avatar">
                       {member.username ? member.username.charAt(0).toUpperCase() : 'U'}
@@ -1249,13 +1291,13 @@ const App: React.FC = () => {
             {isHost && (
               <div className="start-room-section">
                 <p className="start-hint">
-                  {roomMembers.length < 2 
+                  {(roomMembers || []).length < 2 
                     ? 'Пригласите еще участников, чтобы начать выбор фильмов'
                     : 'Все участники готовы! Нажмите кнопку, чтобы начать выбор фильмов'}
                 </p>
                 <button
                   onClick={handleStartRoom}
-                  disabled={loading || roomMembers.length < 2}
+                  disabled={loading || (roomMembers || []).length < 2}
                   className="primary-button large start-button"
                 >
                   {loading ? 'Запуск...' : '🎬 Начать выбор фильмов'}
@@ -1297,9 +1339,9 @@ const App: React.FC = () => {
             <p>Осталось фильмов: {remainingMovies}</p>
           </div>
           <div>
-            {matches && matches.length > 0 && (
+            {(matches || []).length > 0 && (
               <div className="matches-badge">
-                🎉 Матчей: {matches.length}
+                🎉 Матчей: {(matches || []).length}
               </div>
             )}
             <button onClick={handleLeaveRoom} className="secondary-button">Выйти из комнаты</button>
@@ -1367,40 +1409,64 @@ const App: React.FC = () => {
 
         {!loading && movies && movies.length > 0 && (!movies[currentMovieIndex] || currentMovieIndex >= movies.length) && !showMatchLinks && !showRecommendations && (
           <div className="no-more-movies">
-            <h2>🎬 Все фильмы просмотрены!</h2>
-            {matches && matches.length > 0 ? (
-              <div>
-                <p>Найдено матчей: {matches.length}</p>
-                <p>Вы можете посмотреть ссылки для просмотра найденных фильмов</p>
-                {matches.length > 0 && (
-                  <button 
-                    onClick={() => {
-                      setLastMatch(matches[0]);
-                      setShowMatchLinks(true);
-                    }} 
-                    className="primary-button"
-                    style={{ marginTop: '20px' }}
-                  >
-                    🎉 Посмотреть матчи ({matches.length} матч{matches.length > 1 ? 'ей' : ''})
-                  </button>
-                )}
-                <button onClick={handleLeaveRoom} className="secondary-button" style={{ marginTop: '10px' }}>
+            <div className="no-more-movies-header">
+              <h2>🎬 Все фильмы просмотрены!</h2>
+              <p className="no-more-movies-sub">Свайпы закончились — смотрите матчи и ссылки на просмотр</p>
+            </div>
+            {(matches || []).length > 0 ? (
+              <div className="no-more-movies-content">
+                <h3 className="matches-section-title">🎉 Ваши матчи ({(matches || []).length})</h3>
+                <p className="matches-section-hint">Нажмите «Где посмотреть» — откроются ссылки на Кинопоиск, Старт, Окко и другие</p>
+                <div className="matches-grid">
+                  {(matches || []).filter((m): m is Match => !!m && !!(m as Match).id).map((m) => (
+                    <div key={m.id} className="match-card">
+                      {m.movie && (
+                        <>
+                          <img
+                            src={m.movie.poster_url}
+                            alt={m.movie.title}
+                            className="match-card-poster"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = `https://via.placeholder.com/200x300?text=${encodeURIComponent(m.movie!.title)}`;
+                            }}
+                          />
+                          <div className="match-card-info">
+                            <h4>{m.movie.title}</h4>
+                            {m.movie.year && <span className="match-card-year">{m.movie.year}</span>}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setLastMatch(m);
+                                setShowMatchLinks(true);
+                              }}
+                              className="primary-button match-watch-button"
+                            >
+                              🎬 Где посмотреть
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button onClick={handleLeaveRoom} className="secondary-button no-more-back">
                   Вернуться в меню
                 </button>
               </div>
             ) : (
-              <div>
-                <p>Пока нет совпадений.</p>
-                {userGenres.length > 0 && (
-                  <button 
-                    onClick={() => showGenreRecommendations()} 
+              <div className="no-more-movies-empty">
+                <p>Пока нет совпадений — лайкните одни и те же фильмы с другом.</p>
+                {(userGenres || []).length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => showGenreRecommendations()}
                     className="primary-button"
-                    style={{ marginTop: '20px' }}
                   >
-                    🎯 Посмотреть рекомендации по жанрам
+                    🎯 Рекомендации по жанрам
                   </button>
                 )}
-                <button onClick={handleLeaveRoom} className="secondary-button" style={{ marginTop: '10px' }}>
+                <button onClick={handleLeaveRoom} className="secondary-button no-more-back">
                   Вернуться в меню
                 </button>
               </div>
@@ -1497,17 +1563,17 @@ const App: React.FC = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setShowMatchModal(false)}>×</button>
             <h2>🎉 Матч!</h2>
-            {lastMatch.movie && (
+            {lastMatch.movie && typeof lastMatch.movie === 'object' && (
               <div className="match-movie">
                 <img
-                  src={lastMatch.movie.poster_url}
-                  alt={lastMatch.movie.title}
+                  src={lastMatch.movie.poster_url || ''}
+                  alt={lastMatch.movie.title || 'Постер'}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(lastMatch.movie!.title)}`;
+                    target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(lastMatch.movie?.title || 'Фильм')}`;
                   }}
                 />
-                <h3>{lastMatch.movie.title}</h3>
+                <h3>{lastMatch.movie.title || 'Фильм'}</h3>
                 <p>Все участники лайкнули этот фильм!</p>
               </div>
             )}
