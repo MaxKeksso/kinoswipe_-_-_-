@@ -139,7 +139,7 @@ export const FootballPage: React.FC = () => {
                       <span className="date-icon">📅</span>
                       <span>{formatDate(match.date)}</span>
                       <span className="time-separator">•</span>
-                      <span className="match-time">{match.time}</span>
+                      <span className="match-time">{formatTime(match.time)}</span>
                     </div>
                     </div>
                     ))
@@ -173,9 +173,9 @@ export const FootballPage: React.FC = () => {
                       <span className="date-icon">📅</span>
                       <span>{formatDate(match.date)}</span>
                       <span className="time-separator">•</span>
-                      <span className="match-time">{match.time}</span>
+                      <span className="match-time">{formatTime(match.time)}</span>
                     </div>
-                    </div>
+                  </div>
                     ))
                   )}
                 </div>
