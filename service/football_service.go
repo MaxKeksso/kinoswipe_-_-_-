@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 )
@@ -26,12 +27,14 @@ type FootballMatch struct {
 
 // FootballService управляет получением данных о футбольных матчах
 type FootballService struct {
-	apiKey      string
-	apiBaseURL  string
-	cache       map[string][]FootballMatch
-	cacheMutex  sync.RWMutex
-	lastUpdate  map[string]time.Time
-	cacheTTL    time.Duration
+	apiKey         string // Football-Data.org (европейские турниры)
+	apiFootballKey string // API-Football (api-sports.io) для РПЛ
+	apiBaseURL     string
+	apiFootballURL string
+	cache          map[string][]FootballMatch
+	cacheMutex     sync.RWMutex
+	lastUpdate     map[string]time.Time
+	cacheTTL       time.Duration
 }
 
 // Football-Data.org API структуры
@@ -64,18 +67,15 @@ type Competition struct {
 	Name string `json:"name"`
 }
 
-func NewFootballService(apiKey string) *FootballService {
-	// Если API ключ не указан, используем бесплатный доступ (ограниченный)
-	if apiKey == "" {
-		apiKey = "" // Football-Data.org позволяет делать запросы без ключа, но с ограничениями
-	}
-	
+func NewFootballService(apiKey, apiFootballKey string) *FootballService {
 	return &FootballService{
-		apiKey:     apiKey,
-		apiBaseURL: "https://api.football-data.org/v4",
-		cache:      make(map[string][]FootballMatch),
-		lastUpdate: make(map[string]time.Time),
-		cacheTTL:   5 * time.Minute, // Кеш на 5 минут
+		apiKey:         apiKey,
+		apiFootballKey: apiFootballKey,
+		apiBaseURL:     "https://api.football-data.org/v4",
+		apiFootballURL: "https://v3.football.api-sports.io",
+		cache:          make(map[string][]FootballMatch),
+		lastUpdate:     make(map[string]time.Time),
+		cacheTTL:       5 * time.Minute,
 	}
 }
 
@@ -109,28 +109,131 @@ func (s *FootballService) GetRPLMatches() ([]FootballMatch, error) {
 	return matches, nil
 }
 
-// fetchRPLMatches пытается получить матчи РПЛ из API
+// API-Football (api-sports.io) структуры ответа
+type ApiFootballFixturesResponse struct {
+	Response []ApiFootballFixture `json:"response"`
+}
+
+type ApiFootballFixture struct {
+	Fixture ApiFootballFixtureInfo `json:"fixture"`
+	League  struct {
+		Name string `json:"name"`
+	} `json:"league"`
+	Teams struct {
+		Home struct {
+			Name string `json:"name"`
+		} `json:"home"`
+		Away struct {
+			Name string `json:"name"`
+		} `json:"away"`
+	} `json:"teams"`
+	Goals struct {
+		Home *int `json:"home"`
+		Away *int `json:"away"`
+	} `json:"goals"`
+}
+
+type ApiFootballFixtureInfo struct {
+	ID     int    `json:"id"`
+	Date   string `json:"date"`
+	Status struct {
+		Short string `json:"short"`
+	} `json:"status"`
+}
+
+// fetchRPLMatches получает матчи РПЛ из API-Football (api-sports.io), league id 235 = Russian Premier League
 func (s *FootballService) fetchRPLMatches() ([]FootballMatch, error) {
-	// Football-Data.org использует код "PL" для Premier League, но не для РПЛ
-	// Попробуем найти РПЛ по коду или названию
-	// Код РПЛ может быть "RPL" или нужно искать по названию "Russian Premier League"
-	
-	// Сначала попробуем получить список доступных соревнований
-	// Но для простоты попробуем прямой запрос к РПЛ (если доступен)
-	
-	// Альтернативный подход: использовать API-Football.com или другой источник
-	// Пока используем статические данные, но с правильным временем
-	
-	// Для реальной интеграции можно использовать:
-	// 1. API-Football.com (требует API ключ, но предоставляет РПЛ)
-	// 2. Парсинг официального сайта РПЛ
-	// 3. Другой спортивный API
-	
-	log.Printf("Attempting to fetch RPL matches from API")
-	
-	// Пока возвращаем ошибку, чтобы использовать статические данные
-	// В будущем здесь можно добавить реальный API запрос
-	return nil, fmt.Errorf("RPL API not implemented yet, using static data")
+	if s.apiFootballKey == "" {
+		return nil, fmt.Errorf("API_FOOTBALL_KEY not set")
+	}
+
+	season := time.Now().Year()
+	// Сезон РПЛ: с июля по май, для первой половины года берём предыдущий год
+	if time.Now().Month() < 7 {
+		season--
+	}
+	url := fmt.Sprintf("%s/fixtures?league=235&season=%d", s.apiFootballURL, season)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("x-apisports-key", s.apiFootballKey)
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("API-Football returned %d: %s", resp.StatusCode, string(body))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var apiResp ApiFootballFixturesResponse
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return nil, err
+	}
+
+	moscowLocation, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		moscowLocation = time.UTC
+	}
+	now := time.Now()
+
+	matches := make([]FootballMatch, 0)
+	for _, f := range apiResp.Response {
+		matchDateUTC, err := time.Parse(time.RFC3339, f.Fixture.Date)
+		if err != nil {
+			continue
+		}
+		matchDate := matchDateUTC.In(moscowLocation)
+
+		// Показываем матчи: прошедшие за последние 3 дня + будущие в течение 30 дней
+		if matchDate.Before(now.Add(-3*24*time.Hour)) || matchDate.After(now.Add(30*24*time.Hour)) {
+			continue
+		}
+
+		status := "upcoming"
+		switch f.Fixture.Status.Short {
+		case "1H", "HT", "2H", "ET", "P":
+			status = "live"
+		case "FT", "AET", "PEN":
+			status = "finished"
+		}
+
+		match := FootballMatch{
+			ID:         fmt.Sprintf("%d", f.Fixture.ID),
+			Date:       matchDate.Format("2006-01-02"),
+			Time:       matchDate.Format("15:04"),
+			HomeTeam:   f.Teams.Home.Name,
+			AwayTeam:   f.Teams.Away.Name,
+			Tournament: f.League.Name,
+			Status:     status,
+			MatchDate:  matchDate,
+		}
+		if f.Goals.Home != nil {
+			match.HomeScore = f.Goals.Home
+		}
+		if f.Goals.Away != nil {
+			match.AwayScore = f.Goals.Away
+		}
+		matches = append(matches, match)
+	}
+
+	sort.Slice(matches, func(i, j int) bool {
+		return matches[i].MatchDate.Before(matches[j].MatchDate)
+	})
+
+	log.Printf("Fetched %d RPL matches from API-Football", len(matches))
+	return matches, nil
 }
 
 // GetEuropeanMatches возвращает матчи европейских турниров

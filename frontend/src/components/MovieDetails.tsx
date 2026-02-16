@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { apiService, Movie } from '../api/api';
+import { getMovieDisplayTitle, translateGenres } from '../utils/movieRussian';
 import './MovieDetails.css';
 
 interface MovieDetailsProps {
@@ -50,7 +51,7 @@ export const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, isAdmin = fal
     }
   };
 
-  const genres = parseGenres(movie.genre || []);
+  const genres = translateGenres(parseGenres(movie.genre || []));
 
   return (
     <div className="movie-details-overlay" onClick={onClose}>
@@ -142,8 +143,10 @@ export const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, isAdmin = fal
               </>
             ) : (
               <>
-                <h2>{movie.title}</h2>
-                {movie.title_en && <p className="movie-title-en">{movie.title_en}</p>}
+                <h2>{getMovieDisplayTitle(movie)}</h2>
+                {movie.title_en && movie.title !== movie.title_en && (
+                  <p className="movie-title-en">{movie.title_en}</p>
+                )}
                 <div className="movie-meta">
                   {movie.year && <span>📅 {movie.year} год</span>}
                   {movie.duration && <span>⏱ {movie.duration} мин</span>}
@@ -164,8 +167,8 @@ export const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, isAdmin = fal
                 </div>
                 {genres.length > 0 && (
                   <div className="movie-genres">
-                    {genres.map((genre, index) => (
-                      <span key={index} className="genre-tag">{genre}</span>
+                    {genres.map((g, index) => (
+                      <span key={index} className="genre-tag">{g}</span>
                     ))}
                   </div>
                 )}

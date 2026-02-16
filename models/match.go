@@ -22,6 +22,14 @@ type MatchWithDetails struct {
 	Users []User  `json:"users"` // Пользователи, которые лайкнули фильм
 }
 
+// AlmostMatch — фильм, который лайкнули все активные участники кроме одного (N-1).
+type AlmostMatch struct {
+	MovieID       uuid.UUID  `json:"movie_id"`
+	Movie         *Movie     `json:"movie"`
+	LikesCount    int        `json:"likes_count"`
+	MissingUserID *uuid.UUID `json:"missing_user_id,omitempty"`
+}
+
 // MatchNotification представляет уведомление о матче для WebSocket
 type MatchNotification struct {
 	Type      string         `json:"type"` // "match"

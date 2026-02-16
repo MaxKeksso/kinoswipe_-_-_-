@@ -5,7 +5,6 @@ interface AuthFormProps {
   onLogin: (username: string) => void;
   onUserLogin: (email: string, password: string) => void;
   onRegister: (username: string, email: string, password: string, phone?: string) => void;
-  onAdminLogin: (email: string, password: string) => void;
   loading: boolean;
   error: string;
 }
@@ -14,11 +13,10 @@ export const AuthForm: React.FC<AuthFormProps> = ({
   onLogin,
   onUserLogin,
   onRegister,
-  onAdminLogin,
   loading,
   error,
 }) => {
-  const [mode, setMode] = useState<'quick' | 'login' | 'register' | 'admin'>('quick');
+  const [mode, setMode] = useState<'quick' | 'login' | 'register'>('quick');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,13 +43,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     }
   };
 
-  const handleAdminLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email.trim() && password.trim()) {
-      onAdminLogin(email.trim(), password);
-    }
-  };
-
   return (
     <div className="auth-form-container">
       <div className="auth-tabs">
@@ -72,12 +63,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({
           onClick={() => setMode('register')}
         >
           Регистрация
-        </button>
-        <button
-          className={`auth-tab ${mode === 'admin' ? 'active' : ''}`}
-          onClick={() => setMode('admin')}
-        >
-          Админ
         </button>
       </div>
 
@@ -184,35 +169,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         </form>
       )}
 
-      {mode === 'admin' && (
-        <form onSubmit={handleAdminLogin} className="auth-form">
-          <input
-            type="email"
-            placeholder="Email админа"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-            className="input-field"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Пароль"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-            className="input-field"
-            required
-          />
-          <button
-            type="submit"
-            disabled={loading || !email.trim() || !password.trim()}
-            className="primary-button admin-button"
-          >
-            {loading ? 'Вход...' : 'Войти как админ'}
-          </button>
-        </form>
-      )}
     </div>
   );
 };

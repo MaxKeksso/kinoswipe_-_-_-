@@ -3,6 +3,25 @@ import axios from 'axios';
 // Используем относительный путь - nginx будет проксировать запросы
 const API_URL = process.env.REACT_APP_API_URL || '/api/v1';
 
+const ACCESS_TOKEN_KEY = 'access_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
+const USER_ID_KEY = 'userId';
+const USER_KEY = 'user';
+
+export interface AuthResponse {
+  user: User;
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
+}
+
+let onApiError: ((message: string, status?: number) => void) | null = null;
+
+/** Подписка на ошибки API для отображения пользователю */
+export function setApiErrorHandler(handler: (message: string, status?: number) => void) {
+  onApiError = handler;
+}
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -10,14 +29,104 @@ const api = axios.create({
   },
 });
 
-// Добавление заголовка X-User-ID к каждому запросу
+// Запрос: Authorization Bearer и X-User-ID (совместимость)
 api.interceptors.request.use((config) => {
-  const userId = localStorage.getItem('userId');
-  if (userId && config.headers) {
-    config.headers['X-User-ID'] = userId;
+  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+  const userId = localStorage.getItem(USER_ID_KEY);
+  if (config.headers) {
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (userId) {
+      config.headers['X-User-ID'] = userId;
+    }
   }
   return config;
 });
+
+// Ответ: при 401 пробуем refresh и повтор запроса
+api.interceptors.response.use(
+  (response) => response,
+  async (err: unknown) => {
+    const axiosErr = err as { response?: { status?: number; data?: { error?: string; message?: string } }; config?: Record<string, unknown> & { _retry?: boolean }; message?: string };
+    const originalRequest = axiosErr.config as (Record<string, unknown> & { _retry?: boolean }) | undefined;
+
+    if (axiosErr.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      if (refreshToken) {
+        originalRequest._retry = true;
+        try {
+          const { data } = await axios.post<AuthResponse>(`${API_URL}/auth/refresh`, {
+            refresh_token: refreshToken,
+          });
+          if (data.access_token) {
+            localStorage.setItem(ACCESS_TOKEN_KEY, data.access_token);
+            if (data.refresh_token) {
+              localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
+            }
+            if (data.user?.id) {
+              localStorage.setItem(USER_ID_KEY, data.user.id);
+              localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            }
+            const headers = originalRequest.headers as Record<string, string> | undefined;
+            if (headers) {
+              headers.Authorization = `Bearer ${data.access_token}`;
+            }
+            // Повтор запроса с обновлённым токеном; config приходит из axios и содержит url и т.д.
+            return api(originalRequest as unknown as Parameters<typeof api>[0]);
+          }
+        } catch (_refreshErr) {
+          localStorage.removeItem(ACCESS_TOKEN_KEY);
+          localStorage.removeItem(REFRESH_TOKEN_KEY);
+          localStorage.removeItem(USER_ID_KEY);
+          localStorage.removeItem(USER_KEY);
+        }
+      }
+    }
+
+    const message =
+      axiosErr.response?.data?.error ||
+      axiosErr.response?.data?.message ||
+      axiosErr.message ||
+      'Ошибка запроса';
+    const status = axiosErr.response?.status;
+    if (onApiError) {
+      onApiError(String(message), status);
+    }
+    return Promise.reject(err);
+  }
+);
+
+export const authStorage = {
+  setTokens: (access: string, refresh?: string, expiresIn?: number) => {
+    localStorage.setItem(ACCESS_TOKEN_KEY, access);
+    if (refresh != null) localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+  },
+  setUser: (user: User) => {
+    if (user?.id) {
+      localStorage.setItem(USER_ID_KEY, user.id);
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    }
+  },
+  getAccessToken: () => localStorage.getItem(ACCESS_TOKEN_KEY),
+  getRefreshToken: () => localStorage.getItem(REFRESH_TOKEN_KEY),
+  getUserId: () => localStorage.getItem(USER_ID_KEY),
+  getUser: (): User | null => {
+    const raw = localStorage.getItem(USER_KEY);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as User;
+    } catch {
+      return null;
+    }
+  },
+  clear: () => {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(USER_ID_KEY);
+    localStorage.removeItem(USER_KEY);
+  },
+};
 
 // Типы данных
 export interface User {
@@ -258,8 +367,13 @@ export const apiService = {
     return response.data;
   },
 
-  login: async (email: string, password: string): Promise<User> => {
-    const response = await api.post<User>('/auth/login', { email, password });
+  login: async (email: string, password: string): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('/auth/login', { email, password });
+    return response.data;
+  },
+
+  refresh: async (refreshToken: string): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('/auth/refresh', { refresh_token: refreshToken });
     return response.data;
   },
 

@@ -26,13 +26,10 @@ func (h *FeedbackHandler) CreateFeedback(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Получаем userID (опционально)
+	// Получаем userID (опционально) из JWT или X-User-ID
 	var userID *uuid.UUID
-	userIDStr := r.Header.Get("X-User-ID")
-	if userIDStr != "" {
-		if id, err := uuid.Parse(userIDStr); err == nil {
-			userID = &id
-		}
+	if id, ok := UserIDFromRequest(r); ok {
+		userID = &id
 	}
 
 	feedback := &models.Feedback{

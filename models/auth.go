@@ -14,8 +14,10 @@ type RegisterRequest struct {
 	Phone    string `json:"phone,omitempty"`
 }
 
-// AuthResponse представляет ответ на авторизацию
+// AuthResponse представляет ответ на авторизацию (логин / refresh)
 type AuthResponse struct {
-	User  *User  `json:"user"`
-	Token string `json:"token,omitempty"` // Для будущей JWT авторизации
+	User         *User  `json:"user"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+	ExpiresIn    int64  `json:"expires_in"` // секунды до истечения access token
 }

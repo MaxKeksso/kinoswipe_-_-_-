@@ -7,8 +7,11 @@ import (
 	"sync"
 	"time"
 
+	"kinoswipe/config"
 	"kinoswipe/models"
+	"kinoswipe/repository"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -29,6 +32,9 @@ type Hub struct {
 	unregister chan *Client
 	broadcast  chan *Message
 	mu         sync.RWMutex
+	// опционально: для извлечения user_id из JWT в query token=
+	userRepo *repository.UserRepository
+	cfg      *config.Config
 }
 
 type Client struct {
@@ -52,6 +58,12 @@ func NewHub() *Hub {
 		unregister: make(chan *Client),
 		broadcast:  make(chan *Message),
 	}
+}
+
+// SetAuth задаёт репозиторий и конфиг для авторизации WebSocket по JWT (query token=).
+func (h *Hub) SetAuth(userRepo *repository.UserRepository, cfg *config.Config) {
+	h.userRepo = userRepo
+	h.cfg = cfg
 }
 
 func (h *Hub) Run() {
@@ -266,20 +278,36 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получаем userID из query параметра или заголовка
-	userIDStr := r.URL.Query().Get("user_id")
-	if userIDStr == "" {
-		userIDStr = r.Header.Get("X-User-ID")
+	// userID: сначала из JWT (query token=), затем user_id или X-User-ID
+	var userID uuid.UUID
+	if tokenStr := r.URL.Query().Get("token"); tokenStr != "" && h.userRepo != nil && h.cfg != nil {
+		claims := &jwt.MapClaims{}
+		token, errJWT := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
+			return []byte(h.cfg.JWT.Secret), nil
+		})
+		if errJWT == nil && token.Valid {
+			if sub, ok := (*claims)["sub"].(string); ok {
+				if uid, errParse := uuid.Parse(sub); errParse == nil {
+					userID = uid
+				}
+			}
+		}
 	}
-	if userIDStr == "" {
-		respondWithError(w, http.StatusUnauthorized, "User ID required")
-		return
-	}
-
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
-		return
+	if userID == uuid.Nil {
+		userIDStr := r.URL.Query().Get("user_id")
+		if userIDStr == "" {
+			userIDStr = r.Header.Get("X-User-ID")
+		}
+		if userIDStr == "" {
+			respondWithError(w, http.StatusUnauthorized, "User ID required")
+			return
+		}
+		var errParse error
+		userID, errParse = uuid.Parse(userIDStr)
+		if errParse != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+			return
+		}
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)

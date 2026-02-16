@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { authStorage } from '../api/api';
 
 export interface WebSocketMessage {
   type: string;
@@ -28,7 +29,7 @@ export const useWebSocket = ({
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // WebSocket URL - для работы через nginx прокси используем текущий хост
+  // WebSocket URL: user_id (обязательно) + token (для авторизации, fallback на X-User-ID на бэкенде)
   const getWebSocketURL = (rid: string, uid: string) => {
     if (!rid || !uid) return '';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -36,7 +37,12 @@ export const useWebSocket = ({
     let port = window.location.port;
     if (!port) port = window.location.protocol === 'https:' ? '443' : '80';
     const hostPort = (port === '80' || port === '443') ? host : `${host}:${port}`;
-    return `${protocol}//${hostPort}/api/v1/rooms/${rid}/ws?user_id=${encodeURIComponent(uid)}`;
+    let url = `${protocol}//${hostPort}/api/v1/rooms/${rid}/ws?user_id=${encodeURIComponent(uid)}`;
+    const token = authStorage.getAccessToken();
+    if (token) {
+      url += `&token=${encodeURIComponent(token)}`;
+    }
+    return url;
   };
 
   const connect = () => {

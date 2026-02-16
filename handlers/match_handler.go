@@ -56,3 +56,21 @@ func (h *MatchHandler) GetRoomMatches(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, matches)
 }
 
+// GetRoomAlmostMatches возвращает фильмы, которые лайкнули все активные участники кроме одного (N-1).
+func (h *MatchHandler) GetRoomAlmostMatches(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	roomID, err := uuid.Parse(vars["room_id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid room ID")
+		return
+	}
+
+	list, err := h.matchService.GetAlmostMatches(roomID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to get almost matches")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, list)
+}
+

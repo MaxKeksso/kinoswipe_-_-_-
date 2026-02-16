@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiService, Movie } from '../api/api';
+import { getMovieDisplayTitle } from '../utils/movieRussian';
 import './RecommendationPage.css';
 
 interface RecommendationPageProps {
@@ -38,7 +39,16 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({
   const [recommendedMovies, setRecommendedMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-  const [userSwipes, setUserSwipes] = useState<Set<string>>(new Set()); // ID фильмов, которые пользователь уже свайпнул
+
+  const loadUserSwipes = async (): Promise<Set<string>> => {
+    try {
+      const swipes = await apiService.getUserSwipes(roomId);
+      return new Set(swipes.map(swipe => swipe.movie_id));
+    } catch (err) {
+      console.error('Error loading user swipes:', err);
+      return new Set<string>();
+    }
+  };
 
   useEffect(() => {
     if (userId && roomId) {
@@ -46,21 +56,8 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({
         loadRecommendations();
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadUserSwipes/loadRecommendations стабильны по смыслу
   }, [userGenres, roomId, userId]);
-
-  const loadUserSwipes = async () => {
-    try {
-      const swipes = await apiService.getUserSwipes(roomId);
-      // Создаем Set из ID фильмов, которые пользователь уже свайпнул
-      const swipedMovieIds = new Set(swipes.map(swipe => swipe.movie_id));
-      setUserSwipes(swipedMovieIds);
-      return swipedMovieIds;
-    } catch (err) {
-      console.error('Error loading user swipes:', err);
-      setUserSwipes(new Set());
-      return new Set<string>();
-    }
-  };
 
   const loadRecommendations = async () => {
     try {
@@ -221,15 +218,15 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({
               >
                 <img
                   src={movie.poster_url}
-                  alt={movie.title}
+                  alt={getMovieDisplayTitle(movie)}
                   className="recommendation-poster"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = `https://via.placeholder.com/200x300?text=${encodeURIComponent(movie.title)}`;
+                    target.src = `https://via.placeholder.com/200x300?text=${encodeURIComponent(getMovieDisplayTitle(movie))}`;
                   }}
                 />
                 <div className="recommendation-info">
-                  <h3>{movie.title}</h3>
+                  <h3>{getMovieDisplayTitle(movie)}</h3>
                   {movie.year && <p className="movie-year">📅 {movie.year}</p>}
                   {movie.kp_rating && (
                     <div className="movie-rating">
@@ -244,7 +241,7 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({
 
         {selectedMovie && (
           <div className="streaming-links-section">
-            <h3>Где посмотреть "{selectedMovie.title}":</h3>
+            <h3>Где посмотреть «{getMovieDisplayTitle(selectedMovie)}»:</h3>
             <div className="streaming-links">
               {getStreamingLinks(selectedMovie).map((link) => (
                 <a

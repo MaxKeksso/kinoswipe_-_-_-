@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { apiService, Movie } from '../api/api';
+import { getMovieDisplayTitle } from '../utils/movieRussian';
 import { MovieDetails } from './MovieDetails';
 import './MovieLibrary.css';
+
+const LAZY_PAGE_SIZE = 40;
 
 interface MovieLibraryProps {
   onClose: () => void;
@@ -13,9 +16,27 @@ export const MovieLibrary: React.FC<MovieLibraryProps> = ({ onClose, isAdmin = f
   const [loading, setLoading] = useState(true);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(LAZY_PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadMovies();
+  }, []);
+
+  // Lazy loading: подгружаем следующую порцию при появлении sentinel в зоне видимости
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((prev) => prev + LAZY_PAGE_SIZE);
+        }
+      },
+      { rootMargin: '200px', threshold: 0 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
   }, []);
 
   const loadMovies = async () => {
@@ -33,13 +54,22 @@ export const MovieLibrary: React.FC<MovieLibraryProps> = ({ onClose, isAdmin = f
       setMovies([]);
     } finally {
       setLoading(false);
+      setVisibleCount(LAZY_PAGE_SIZE);
     }
   };
 
-  const filteredMovies = movies.filter(movie =>
-    movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (movie.title_en && movie.title_en.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredMovies = movies.filter(movie => {
+    const displayTitle = getMovieDisplayTitle(movie);
+    return displayTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (movie.title && movie.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (movie.title_en && movie.title_en.toLowerCase().includes(searchQuery.toLowerCase()));
+  });
+  const visibleMovies = filteredMovies.slice(0, visibleCount);
+  const hasMore = visibleMovies.length < filteredMovies.length;
+  const resetVisibleCount = useCallback(() => setVisibleCount(LAZY_PAGE_SIZE), []);
+  useEffect(() => {
+    resetVisibleCount();
+  }, [searchQuery, resetVisibleCount]);
 
   return (
     <div className="movie-library-page">
@@ -74,32 +104,36 @@ export const MovieLibrary: React.FC<MovieLibraryProps> = ({ onClose, isAdmin = f
             )}
           </div>
         ) : (
-          <div className="movies-grid">
-            {filteredMovies.map((movie) => (
-              <div
-                key={movie.id}
-                className="movie-library-card"
-                onClick={() => setSelectedMovie(movie)}
-              >
-                <img
-                  src={movie.poster_url}
-                  alt={movie.title}
+          <>
+            <div className="movies-grid">
+              {visibleMovies.map((movie) => (
+                <div
+                  key={movie.id}
+                  className="movie-library-card"
+                  onClick={() => setSelectedMovie(movie)}
+                >
+                  <img
+                    src={movie.poster_url}
+                  alt={getMovieDisplayTitle(movie)}
                   className="movie-library-poster"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = `https://via.placeholder.com/200x300?text=${encodeURIComponent(movie.title)}`;
+                    target.src = `https://via.placeholder.com/200x300?text=${encodeURIComponent(getMovieDisplayTitle(movie))}`;
                   }}
                 />
                 <div className="movie-library-info">
-                  <h4>{movie.title}</h4>
-                  {movie.year && <p className="movie-year">📅 {movie.year}</p>}
-                  {movie.kp_rating && (
-                    <p className="movie-rating">⭐ {movie.kp_rating.toFixed(1)}</p>
-                  )}
+                  <h4>{getMovieDisplayTitle(movie)}</h4>
+                    {movie.year && <p className="movie-year">📅 {movie.year}</p>}
+                    {movie.kp_rating && (
+                      <p className="movie-rating">⭐ {movie.kp_rating.toFixed(1)}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            {hasMore && <div ref={sentinelRef} className="lazy-sentinel" style={{ height: 20, gridColumn: '1 / -1' }} />}
+            {hasMore && <p className="lazy-hint">Показано {visibleMovies.length} из {filteredMovies.length}</p>}
+          </>
         )}
       </div>
 

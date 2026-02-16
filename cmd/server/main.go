@@ -44,14 +44,15 @@ func main() {
 	feedbackRepo := repository.NewFeedbackRepository(db.DB)
 	premiereRepo := repository.NewPremiereRepository(db.DB)
 	matchLinkRepo := repository.NewMatchLinkRepository(db.DB)
+	refreshTokenRepo := repository.NewRefreshTokenRepository(db.DB)
 
 	// Инициализация сервисов
 	matchService := service.NewMatchService(matchRepo, swipeRepo, roomRepo, movieRepo, userRepo)
-	footballService := service.NewFootballService(cfg.FootballAPI.Key)
+	footballService := service.NewFootballService(cfg.FootballAPI.Key, cfg.FootballAPI.ApiFootballKey)
 
 	// Инициализация handlers
 	userHandler := handlers.NewUserHandler(userRepo)
-	authHandler := handlers.NewAuthHandler(userRepo)
+	authHandler := handlers.NewAuthHandler(userRepo, refreshTokenRepo, cfg)
 	roomHandler := handlers.NewRoomHandler(roomRepo, filterRepo)
 	filterHandler := handlers.NewFilterHandler(filterRepo, roomRepo)
 	movieHandler := handlers.NewMovieHandler(movieRepo, roomRepo, filterRepo)
@@ -62,30 +63,48 @@ func main() {
 	matchLinkHandler := handlers.NewMatchLinkHandler(matchLinkRepo)
 	footballHandler := handlers.NewFootballHandler(footballService)
 
-	// Инициализация WebSocket Hub
+	// Инициализация WebSocket Hub (JWT по query token= опционально)
 	wsHub := handlers.NewHub()
+	wsHub.SetAuth(userRepo, cfg)
 	go wsHub.Run()
 
 	// Настройка роутера
 	router := mux.NewRouter()
 
-	// Middleware
+	// Middleware (порядок: request_id → логирование → CORS)
 	router.Use(middleware.Recovery)
+	router.Use(middleware.RequestID)
 	router.Use(middleware.Logging)
 	router.Use(middleware.CORS)
 
 	// API routes
 	api := router.PathPrefix("/api/v1").Subrouter()
 
-	// Health check
+	// Rate limiting по IP (если включено в конфиге)
+	if cfg.Server.RateLimitRPM > 0 {
+		rateLimiter := middleware.NewRateLimiter(cfg.Server.RateLimitRPM, 1*time.Minute)
+		api.Use(rateLimiter.Middleware)
+	}
+
+	// Auth middleware: JWT или X-User-ID → user в контексте
+	api.Use(middleware.AuthMiddleware(userRepo, cfg))
+
+	// Health check (проверка БД)
 	api.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		if err := db.Ping(); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			w.Write([]byte(`{"status":"unhealthy","error":"database"}`))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		w.Write([]byte(`{"status":"ok"}`))
 	}).Methods("GET")
 
-	// Auth routes
+	// Auth routes (публичные)
 	api.HandleFunc("/auth/register", authHandler.Register).Methods("POST")
 	api.HandleFunc("/auth/login", authHandler.Login).Methods("POST")
+	api.HandleFunc("/auth/refresh", authHandler.Refresh).Methods("POST")
 
 	// User routes
 	api.HandleFunc("/users", userHandler.CreateUser).Methods("POST")
@@ -126,14 +145,15 @@ func main() {
 	// Match routes
 	api.HandleFunc("/matches/{id}", matchHandler.GetMatch).Methods("GET")
 	api.HandleFunc("/rooms/{room_id}/matches", matchHandler.GetRoomMatches).Methods("GET")
+	api.HandleFunc("/rooms/{room_id}/almost-matches", matchHandler.GetRoomAlmostMatches).Methods("GET")
 	api.HandleFunc("/matches/{match_id}/links", matchLinkHandler.GetMatchLinks).Methods("GET")
 	api.HandleFunc("/matches/{match_id}/links", matchLinkHandler.CreateMatchLink).Methods("POST")
 
-	// Premiere routes
+	// Premiere routes (GET публичный; create/update/delete только для админа)
 	api.HandleFunc("/premieres", premiereHandler.GetPremieres).Methods("GET")
-	api.HandleFunc("/premieres", premiereHandler.CreatePremiere).Methods("POST")
-	api.HandleFunc("/premieres/{id}", premiereHandler.UpdatePremiere).Methods("PUT")
-	api.HandleFunc("/premieres/{id}", premiereHandler.DeletePremiere).Methods("DELETE")
+	api.Handle("/premieres", middleware.RequireAdmin(http.HandlerFunc(premiereHandler.CreatePremiere))).Methods("POST")
+	api.Handle("/premieres/{id}", middleware.RequireAdmin(http.HandlerFunc(premiereHandler.UpdatePremiere))).Methods("PUT")
+	api.Handle("/premieres/{id}", middleware.RequireAdmin(http.HandlerFunc(premiereHandler.DeletePremiere))).Methods("DELETE")
 
 	// Football routes
 	api.HandleFunc("/football/matches", footballHandler.GetMatches).Methods("GET")

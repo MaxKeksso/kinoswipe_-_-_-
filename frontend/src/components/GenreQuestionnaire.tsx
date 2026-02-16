@@ -75,12 +75,15 @@ export const GenreQuestionnaire: React.FC<GenreQuestionnaireProps> = ({ onComple
             return (
               <button
                 key={genre.id}
+                type="button"
                 className={`genre-card ${isSelected ? 'selected' : ''}`}
                 onClick={() => handleGenreToggle(genre.id)}
+                aria-pressed={isSelected}
+                aria-label={`${genre.name}${isSelected ? ', выбрано' : ''}`}
               >
-                <span className="genre-icon">{genre.icon}</span>
                 <span className="genre-name">{genre.name}</span>
-                {isSelected && <span className="check-mark">✓</span>}
+                <span className="genre-icon">{genre.icon}</span>
+                {isSelected && <span className="check-mark" aria-hidden>✓</span>}
               </button>
             );
           })}

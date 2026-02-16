@@ -161,6 +161,30 @@ func (r *SwipeRepository) GetUserSwipes(userID, roomID uuid.UUID) ([]models.Swip
 	return swipes, nil
 }
 
+// GetUserIDsWhoSwipedInRoom возвращает ID пользователей, сделавших хотя бы один свайп в комнате (активные участники).
+func (r *SwipeRepository) GetUserIDsWhoSwipedInRoom(roomID uuid.UUID) ([]uuid.UUID, error) {
+	query := `
+		SELECT DISTINCT user_id
+		FROM swipes
+		WHERE room_id = $1
+	`
+	rows, err := r.db.Query(query, roomID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user ids: %w", err)
+	}
+	defer rows.Close()
+
+	var ids []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("failed to scan user_id: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
+}
+
 func (r *SwipeRepository) GetAllSwipesByMovie(roomID, movieID uuid.UUID) ([]models.Swipe, error) {
 	query := `
 		SELECT id, user_id, room_id, movie_id, direction, created_at

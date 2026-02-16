@@ -9,7 +9,8 @@ import { RecommendationPage } from './components/RecommendationPage';
 import { Profile } from './components/Profile';
 import { MovieLibrary } from './components/MovieLibrary';
 import { FootballPage } from './components/FootballPage';
-import { apiService, User, Room, Movie, Match, Premiere } from './api/api';
+import { apiService, authStorage, setApiErrorHandler, User, Room, Movie, Match, Premiere } from './api/api';
+import { getMovieDisplayTitle } from './utils/movieRussian';
 import { useWebSocket } from './hooks/useWebSocket';
 import './App.css';
 
@@ -66,11 +67,24 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Загрузка пользователя из localStorage при старте
+  // Глобальный обработчик ошибок API (показ пользователю)
   useEffect(() => {
-    const savedUserId = localStorage.getItem('userId');
-    const savedUsername = localStorage.getItem('username');
-    
+    setApiErrorHandler((message, status) => {
+      setError(message);
+      if (status === 401) {
+        authStorage.clear();
+        setUser(null);
+        setState('auth');
+      }
+    });
+  }, []);
+
+  // Загрузка пользователя из localStorage / authStorage при старте
+  useEffect(() => {
+    const savedUserId = authStorage.getUserId() || localStorage.getItem('userId');
+    const savedUser = authStorage.getUser();
+    const savedUsername = savedUser?.username ?? localStorage.getItem('username');
+
     const savedGenres = localStorage.getItem('userGenres');
     if (savedGenres) {
       try {
@@ -80,40 +94,43 @@ const App: React.FC = () => {
         console.error('Error parsing saved genres:', e);
       }
     }
-    
-    if (savedUserId && savedUsername) {
-      // Проверяем, существует ли пользователь
-      apiService.getUser(savedUserId)
-        .then((userData: User) => {
-          setUser(userData);
-          const userType = localStorage.getItem('userType') || userData.user_type;
-          setIsAdmin(userType === 'admin');
-          if (userType === 'admin') {
-            setState('admin');
-          } else {
-            // Проверяем, проходил ли пользователь опросник жанров (по userId)
-            const userGenresKey = `userGenres_${userData.id}`;
-            const userSavedGenres = localStorage.getItem(userGenresKey) || savedGenres;
-            if (userSavedGenres) {
-              try {
-                const parsed = JSON.parse(userSavedGenres);
-                setUserGenres(Array.isArray(parsed) ? parsed : []);
-                setState('room-selection');
-              } catch {
-                setState('genre-questionnaire');
-              }
-            } else {
-              setState('genre-questionnaire');
-            }
+
+    if (savedUserId && (savedUsername || savedUser)) {
+      const userData = savedUser || { id: savedUserId, username: savedUsername || 'User', user_type: localStorage.getItem('userType') || 'regular' } as User;
+      setUser(userData);
+      const userType = localStorage.getItem('userType') || userData.user_type;
+      setIsAdmin(userType === 'admin');
+      if (userType === 'admin') {
+        setState('admin');
+      } else {
+        const userGenresKey = `userGenres_${userData.id}`;
+        const userSavedGenres = localStorage.getItem(userGenresKey) || savedGenres;
+        if (userSavedGenres) {
+          try {
+            const parsed = JSON.parse(userSavedGenres);
+            setUserGenres(Array.isArray(parsed) ? parsed : []);
+            setState('room-selection');
+          } catch {
+            setState('genre-questionnaire');
           }
-        })
-        .catch(() => {
-          // Пользователь не найден, очищаем localStorage
-          localStorage.removeItem('userId');
-          localStorage.removeItem('username');
-          localStorage.removeItem('userType');
-          localStorage.removeItem('userGenres');
-        });
+        } else {
+          setState('genre-questionnaire');
+        }
+      }
+      if (!savedUser && savedUserId) {
+        apiService.getUser(savedUserId)
+          .then((fetched) => {
+            setUser(fetched);
+            authStorage.setUser(fetched);
+          })
+          .catch(() => {
+            authStorage.clear();
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userType');
+            setUser(null);
+          });
+      }
     }
   }, []);
 
@@ -228,6 +245,7 @@ const App: React.FC = () => {
     if (state !== 'room-waiting') {
       setRoomMembers([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- room/user целиком не нужны, отслеживаем только id/code/host_id
   }, [state, room?.id, room?.code, room?.host_id, user?.id]);
 
   // Загрузка фильмов при входе в комнату (только если комната активна)
@@ -530,23 +548,25 @@ const App: React.FC = () => {
   };
 
   // Быстрый вход (без регистрации)
-  // Вход для зарегистрированных пользователей
+  // Вход для зарегистрированных пользователей (JWT + refresh)
   const handleUserLogin = async (email: string, password: string) => {
     setLoading(true);
     setError('');
 
     try {
-      const userData = await apiService.login(email, password);
+      const data = await apiService.login(email, password);
+      const userData = data.user;
+      authStorage.setTokens(data.access_token, data.refresh_token, data.expires_in);
+      authStorage.setUser(userData);
       setUser(userData);
       setIsAdmin(userData.user_type === 'admin');
       localStorage.setItem('userId', userData.id);
       localStorage.setItem('username', userData.username);
       localStorage.setItem('userType', userData.user_type);
-      
+
       if (userData.user_type === 'admin') {
         setState('admin');
       } else {
-        // Проверяем, проходил ли пользователь опросник (по userId, а не по localStorage)
         const userGenresKey = `userGenres_${userData.id}`;
         const savedGenres = localStorage.getItem(userGenresKey);
         if (savedGenres) {
@@ -639,30 +659,6 @@ const App: React.FC = () => {
       setState('genre-questionnaire');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Ошибка регистрации');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Авторизация админа
-  const handleAdminLogin = async (email: string, password: string) => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const adminUser = await apiService.login(email, password);
-      if (adminUser.user_type !== 'admin') {
-        setError('Доступ запрещен. Требуются права администратора.');
-        return;
-      }
-      setUser(adminUser);
-      setIsAdmin(true);
-      localStorage.setItem('userId', adminUser.id);
-      localStorage.setItem('username', adminUser.username);
-      localStorage.setItem('userType', adminUser.user_type);
-      setState('admin');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Ошибка входа');
     } finally {
       setLoading(false);
     }
@@ -892,10 +888,12 @@ const App: React.FC = () => {
     }
   };
 
-  // Выход
+  // Выход (очистка JWT и localStorage)
   const handleLogout = () => {
+    authStorage.clear();
     localStorage.removeItem('userId');
     localStorage.removeItem('username');
+    localStorage.removeItem('userType');
     setUser(null);
     setRoom(null);
     setMovies([]);
@@ -950,7 +948,6 @@ const App: React.FC = () => {
             onLogin={handleQuickLogin}
             onUserLogin={handleUserLogin}
             onRegister={handleRegister}
-            onAdminLogin={handleAdminLogin}
             loading={loading}
             error={error}
           />
@@ -1460,16 +1457,16 @@ const App: React.FC = () => {
                   <div className="card">
                     <img
                       src={movie.poster_url}
-                      alt={movie.title}
-                      onError={(e) => {
+                      alt={getMovieDisplayTitle(movie)}
+                    onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(movie.title)}`;
+                        target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(getMovieDisplayTitle(movie))}`;
                       }}
                     />
                     <div className="card-info">
-                      <h3>{movie.title}</h3>
+                      <h3>{getMovieDisplayTitle(movie)}</h3>
                       <div className="movie-details">
-                        {movie.year && <span>📅 {movie.year}</span>}
+                        {movie.year && <span>📅 {movie.year} год</span>}
                         {movie.duration && <span>⏱ {movie.duration} мин</span>}
                         {movie.imdb_rating && <span>⭐ IMDb: {movie.imdb_rating}</span>}
                         {movie.kp_rating && <span>⭐ КП: {movie.kp_rating}</span>}
@@ -1517,15 +1514,15 @@ const App: React.FC = () => {
                         <>
                           <img
                             src={m.movie.poster_url}
-                            alt={m.movie.title}
+                            alt={getMovieDisplayTitle(m.movie ?? {})}
                             className="match-card-poster"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.src = `https://via.placeholder.com/200x300?text=${encodeURIComponent(m.movie!.title)}`;
+                              target.src = `https://via.placeholder.com/200x300?text=${encodeURIComponent(getMovieDisplayTitle(m.movie ?? {}))}`;
                             }}
                           />
                           <div className="match-card-info">
-                            <h4>{m.movie.title}</h4>
+                            <h4>{getMovieDisplayTitle(m.movie ?? {})}</h4>
                             {m.movie.year && <span className="match-card-year">{m.movie.year}</span>}
                             <button
                               type="button"

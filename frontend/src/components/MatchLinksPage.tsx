@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiService, MatchLink, Match } from '../api/api';
+import { getMovieDisplayTitle } from '../utils/movieRussian';
 import './MatchLinksPage.css';
 
 interface MatchLinksPageProps {
@@ -26,6 +27,7 @@ export const MatchLinksPage: React.FC<MatchLinksPageProps> = ({ match, onClose }
     apiService.getMatch(baseMatch.id).then((full) => {
       setDetailedMatch(full);
     }).catch(() => setDetailedMatch(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- достаточно отслеживать id, movie/users для раннего выхода
   }, [baseMatch?.id]);
 
   useEffect(() => {
@@ -125,15 +127,15 @@ export const MatchLinksPage: React.FC<MatchLinksPageProps> = ({ match, onClose }
           <div className="match-movie-info">
             <img
               src={safeMovie.poster_url || ''}
-              alt={safeMovie.title || 'Постер'}
+              alt={getMovieDisplayTitle(safeMovie)}
               className="match-movie-poster"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(safeMovie?.title || 'Фильм')}`;
+                target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(getMovieDisplayTitle(safeMovie))}`;
               }}
             />
             <div className="movie-details">
-              <h3>{safeMovie.title || 'Фильм'}</h3>
+              <h3>{getMovieDisplayTitle(safeMovie)}</h3>
               {safeMovie.year && (
                 <p className="movie-year">📅 {safeMovie.year} год</p>
               )}

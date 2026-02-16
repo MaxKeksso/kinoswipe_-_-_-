@@ -33,15 +33,8 @@ func (h *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIDStr := r.Header.Get("X-User-ID")
-	if userIDStr == "" {
-		respondWithError(w, http.StatusUnauthorized, "User ID required")
-		return
-	}
-
-	hostID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+	hostID, ok := RequireUserID(w, r)
+	if !ok {
 		return
 	}
 
@@ -86,15 +79,8 @@ func (h *RoomHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIDStr := r.Header.Get("X-User-ID")
-	if userIDStr == "" {
-		respondWithError(w, http.StatusUnauthorized, "User ID required")
-		return
-	}
-
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+	userID, ok := RequireUserID(w, r)
+	if !ok {
 		return
 	}
 
@@ -147,15 +133,8 @@ func (h *RoomHandler) StartRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIDStr := r.Header.Get("X-User-ID")
-	if userIDStr == "" {
-		respondWithError(w, http.StatusUnauthorized, "User ID required")
-		return
-	}
-
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+	userID, ok := RequireUserID(w, r)
+	if !ok {
 		return
 	}
 

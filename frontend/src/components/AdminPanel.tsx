@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { apiService, Premiere, Movie } from '../api/api';
+import { apiService, Premiere } from '../api/api';
+import { getMovieDisplayTitle } from '../utils/movieRussian';
 import './AdminPanel.css';
 
 interface AdminPanelProps {
@@ -532,7 +533,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                     {movie.poster_url && (
                       <img 
                         src={movie.poster_url} 
-                        alt={movie.title || 'Movie'} 
+                        alt={getMovieDisplayTitle(movie)} 
                         className="movie-item-poster"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -541,8 +542,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                       />
                     )}
                     <div className="movie-item-info">
-                      <h3>{movie.title || 'Без названия'}</h3>
-                      {movie.title_en && <p className="movie-title-en">{movie.title_en}</p>}
+                      <h3>{getMovieDisplayTitle(movie)}</h3>
+                      {movie.title_en && movie.title !== movie.title_en && <p className="movie-title-en">{movie.title_en}</p>}
                       {movie.description && (
                         <p className="movie-description">{movie.description.substring(0, 100)}...</p>
                       )}

@@ -21,9 +21,10 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Host string
-	Port string
-	Env  string
+	Host            string
+	Port            string
+	Env             string
+	RateLimitRPM    int   // запросов в минуту на IP (0 = выключено)
 }
 
 type DatabaseConfig struct {
@@ -36,8 +37,9 @@ type DatabaseConfig struct {
 }
 
 type JWTConfig struct {
-	Secret string
-	Expiry string
+	Secret       string
+	Expiry       string // access token, e.g. "24h"
+	RefreshExpiry string // refresh token, e.g. "168h" (7 days)
 }
 
 type MovieAPIConfig struct {
@@ -46,8 +48,8 @@ type MovieAPIConfig struct {
 }
 
 type FootballAPIConfig struct {
-	Key           string // Football-Data.org ключ
-	APISportKey   string // API-sport.ru ключ для точного времени РПЛ
+	Key           string // Football-Data.org ключ (европейские турниры)
+	ApiFootballKey string // API-Football (api-sports.io) ключ для РПЛ
 }
 
 type WebSocketConfig struct {
@@ -97,22 +99,24 @@ func Load() (*Config, error) {
 	serverHost := getEnv("SERVER_HOST", "0.0.0.0")
 	config := &Config{
 		Server: ServerConfig{
-			Host: serverHost,
-			Port: serverPort,
-			Env:  getEnv("ENV", "development"),
+			Host:         serverHost,
+			Port:         serverPort,
+			Env:          getEnv("ENV", "development"),
+			RateLimitRPM: getEnvAsInt("RATE_LIMIT_RPM", 120),
 		},
 		Database: dbConfig,
 		JWT: JWTConfig{
-			Secret: getEnv("JWT_SECRET", "change-me-in-production"),
-			Expiry: getEnv("JWT_EXPIRY", "24h"),
+			Secret:        getEnv("JWT_SECRET", "change-me-in-production"),
+			Expiry:        getEnv("JWT_EXPIRY", "24h"),
+			RefreshExpiry: getEnv("JWT_REFRESH_EXPIRY", "168h"),
 		},
 		MovieAPI: MovieAPIConfig{
 			Key: getEnv("MOVIE_API_KEY", ""),
 			URL: getEnv("MOVIE_API_URL", ""),
 		},
 		FootballAPI: FootballAPIConfig{
-			Key:         getEnv("FOOTBALL_API_KEY", ""),
-			APISportKey: getEnv("API_SPORT_KEY", ""),
+			Key:           getEnv("FOOTBALL_API_KEY", ""),
+			ApiFootballKey: getEnv("API_FOOTBALL_KEY", ""),
 		},
 		WebSocket: WebSocketConfig{
 			ReadBufferSize:  getEnvAsInt("WS_READ_BUFFER_SIZE", 1024),
