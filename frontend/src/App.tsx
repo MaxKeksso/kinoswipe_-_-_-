@@ -45,6 +45,18 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Подключение виджета ИИ-чата Timeweb Cloud (загружается при открытии приложения)
+  useEffect(() => {
+    const scriptId = 'timeweb-cloud-ai-chat';
+    if (document.getElementById(scriptId)) return;
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = 'https://timeweb.cloud/api/v1/cloud-ai/agents/993cc710-5b8f-457d-b57d-94f9d3eeaaf2/embed.js?collapsed=false';
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    document.body.appendChild(script);
+  }, []);
+
   // Читаем код комнаты из URL (?code=XXX) для ссылки-приглашения
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
