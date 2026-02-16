@@ -138,6 +138,7 @@ const App: React.FC = () => {
   const loadPremieres = async () => {
     try {
       const allPremieres = await apiService.getPremieres();
+      console.log('Loaded premieres:', allPremieres);
       setPremieres(allPremieres || []);
     } catch (err) {
       console.error('Error loading premieres:', err);
@@ -941,8 +942,12 @@ const App: React.FC = () => {
   // Рендер экрана выбора комнаты
   if (state === 'room-selection') {
     const premieresList = Array.isArray(premieres) ? premieres : [];
+    const activePremieres = premieresList.filter(p => p.is_active);
     const leftPremieres = premieresList.filter(p => p.position === 'left' && p.is_active);
     const rightPremieres = premieresList.filter(p => p.position === 'right' && p.is_active);
+    
+    // Отладка: выводим информацию о премьерах
+    console.log('Premieres loaded:', premieresList.length, 'Active:', activePremieres.length);
     // Получаем жанры пользователя (JSON.parse может вернуть null — всегда приводим к массиву)
     let genres: string[] = [];
     const safeParseGenres = (raw: string | null): string[] => {
@@ -1001,6 +1006,11 @@ const App: React.FC = () => {
               )}
             </div>
             <div className="header-actions">
+              {user && user.user_type === 'admin' && (
+                <button onClick={() => setState('admin')} className="secondary-button admin-button">
+                  🔐 Админ-панель
+                </button>
+              )}
               {user && user.email && (
                 <button onClick={() => setShowProfile(true)} className="secondary-button">
                   👤 Профиль
@@ -1072,7 +1082,54 @@ const App: React.FC = () => {
           )}
 
           {error && <p className="error-message">{error}</p>}
-          
+
+          {/* Премьеры (отображаются внизу страницы) */}
+          {activePremieres.length > 0 ? (
+            <div className="premieres-mobile-section">
+              <h2>🎬 Новые премьеры</h2>
+              <div className="premieres-mobile-grid">
+                {activePremieres.map((premiere) => (
+                  <div key={premiere.id} className="premiere-mobile-card">
+                    {premiere.poster_url && (
+                      <img
+                        src={premiere.poster_url}
+                        alt={premiere.title}
+                        className="premiere-mobile-poster"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <div className="premiere-mobile-info">
+                      <h4 className="premiere-mobile-title">{premiere.title}</h4>
+                      {premiere.description && (
+                        <p className="premiere-mobile-description">{premiere.description}</p>
+                      )}
+                      {premiere.release_date && (
+                        <span className="premiere-mobile-date">
+                          📅 {new Date(premiere.release_date).toLocaleDateString('ru-RU')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : premieresList.length > 0 ? (
+            <div className="premieres-mobile-section" style={{ background: 'rgba(255, 0, 0, 0.2)', padding: '15px', borderRadius: '10px' }}>
+              <p style={{ color: 'white', textAlign: 'center' }}>
+                ⚠️ Есть {premieresList.length} премьер(ы), но все неактивны. Активируйте их в админ-панели.
+              </p>
+            </div>
+          ) : (
+            <div className="premieres-mobile-section" style={{ background: 'rgba(255, 193, 7, 0.2)', padding: '15px', borderRadius: '10px' }}>
+              <p style={{ color: 'white', textAlign: 'center' }}>
+                ℹ️ Премьеры не загружены. Добавьте их через админ-панель (🔐 Админ-панель → Премьеры).
+              </p>
+            </div>
+          )}
+
           {/* Подвал */}
           <footer className="app-footer">
             <div className="footer-content">

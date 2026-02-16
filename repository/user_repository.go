@@ -153,6 +153,52 @@ func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
 	return user, nil
 }
 
+func (r *UserRepository) GetByPhone(phone string) (*models.User, error) {
+	user := &models.User{}
+	query := `
+		SELECT id, email, phone, username, avatar_url, password_hash, user_type, created_at, updated_at
+		FROM users
+		WHERE phone = $1
+	`
+
+	var emailVal, phoneVal, avatarURL, passwordHash sql.NullString
+
+	err := r.db.QueryRow(query, phone).Scan(
+		&user.ID,
+		&emailVal,
+		&phoneVal,
+		&user.Username,
+		&avatarURL,
+		&passwordHash,
+		&user.UserType,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("user not found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user by phone: %w", err)
+	}
+
+	// Преобразуем NullString в обычные строки
+	if emailVal.Valid {
+		user.Email = emailVal.String
+	}
+	if phoneVal.Valid {
+		user.Phone = phoneVal.String
+	}
+	if avatarURL.Valid {
+		user.AvatarURL = avatarURL.String
+	}
+	if passwordHash.Valid {
+		user.PasswordHash = passwordHash.String
+	}
+
+	return user, nil
+}
+
 func (r *UserRepository) Update(id uuid.UUID, req *models.UpdateUserRequest) error {
 	query := `
 		UPDATE users

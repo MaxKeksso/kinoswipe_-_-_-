@@ -84,8 +84,31 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* Адаптивность для мобильных - показываем премьеры внизу страницы */
 @media (max-width: 1200px) {
   .premiere-sidebar {
     display: none;
+  }
+}
+
+/* Маленькие телефоны - одна колонка */
+@media (max-width: 480px) {
+  .premiere-sidebar {
+    padding: 12px;
+    margin-top: 15px;
+  }
+
+  .premiere-list {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .premiere-poster {
+    height: 200px;
+  }
+
+  .premiere-sidebar-title {
+    font-size: 18px;
+    margin-bottom: 15px;
   }
 }

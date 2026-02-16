@@ -65,6 +65,8 @@
   max-width: 1200px;
   margin: 0 auto;
   transition: padding 0.3s ease;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .room-selection-container.with-left-sidebar {
@@ -207,6 +209,7 @@
   background: rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   backdrop-filter: blur(10px);
+  box-sizing: border-box;
 }
 
 .available-rooms-section h2 {
@@ -219,6 +222,8 @@
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 15px;
   margin-top: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .room-card {
@@ -228,6 +233,11 @@
   backdrop-filter: blur(5px);
   transition: transform 0.3s ease, background 0.3s ease;
   cursor: pointer;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .room-card:hover {
@@ -240,6 +250,10 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .room-code-badge {
@@ -251,6 +265,9 @@
   letter-spacing: 2px;
   font-family: 'Courier New', monospace;
   color: white;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .room-status {
@@ -258,6 +275,8 @@
   padding: 4px 10px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.2);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .room-card-footer {
@@ -463,6 +482,16 @@ button {
 .secondary-button:hover:not(:disabled) {
   background: #5a6268;
   transform: translateY(-2px);
+}
+
+.admin-button {
+  background: rgba(255, 193, 7, 0.3) !important;
+  border-color: rgba(255, 193, 7, 0.5) !important;
+}
+
+.admin-button:hover:not(:disabled) {
+  background: rgba(255, 193, 7, 0.4) !important;
+  border-color: rgba(255, 193, 7, 0.7) !important;
 }
 
 .swipe-actions {
@@ -871,6 +900,99 @@ input:disabled {
   margin: 0;
 }
 
+/* Секция премьер (показывается всегда, если есть активные премьеры) */
+.premieres-mobile-section {
+  display: block;
+  width: 100%;
+  margin-top: 30px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  box-sizing: border-box;
+}
+
+/* На больших экранах (>1200px) - если есть сайдбары, можно скрыть мобильную секцию */
+@media (min-width: 1201px) {
+  /* Показываем и сайдбары, и мобильную секцию - пользователь увидит премьеры */
+}
+
+.premieres-mobile-section h2 {
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.premieres-mobile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.premiere-mobile-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.premiere-mobile-card:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.premiere-mobile-poster {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.premiere-mobile-info {
+  color: white;
+}
+
+.premiere-mobile-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.premiere-mobile-description {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 6px 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.premiere-mobile-date {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Адаптивность — планшеты */
+@media (max-width: 1024px) and (min-width: 601px) {
+  .rooms-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+
+  .available-rooms-section {
+    padding: 24px 20px;
+  }
+}
+
 /* Адаптивность — планшеты и телефоны */
 @media (max-width: 768px) {
   .App {
@@ -900,6 +1022,44 @@ input:disabled {
 
   .rooms-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .available-rooms-section {
+    padding: 20px 15px;
+    margin-top: 30px;
+  }
+
+  /* На мобильных всегда показываем мобильную секцию премьер */
+  .premieres-mobile-section {
+    display: block !important;
+  }
+
+  .premieres-mobile-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .room-card {
+    padding: 16px;
+  }
+
+  .room-card-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .room-code-badge {
+    font-size: 16px;
+    padding: 6px 12px;
+    letter-spacing: 1px;
+  }
+
+  .room-status {
+    font-size: 11px;
+    padding: 4px 8px;
   }
 
   .header {
@@ -1088,6 +1248,65 @@ input:disabled {
   .create-room-card,
   .join-room-card {
     padding: 20px 16px;
+  }
+
+  .available-rooms-section {
+    padding: 16px 12px;
+    margin-top: 24px;
+  }
+
+  .available-rooms-section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+  }
+
+  .room-card {
+    padding: 14px;
+  }
+
+  .room-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .room-code-badge {
+    font-size: 15px;
+    padding: 6px 10px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .room-status {
+    font-size: 11px;
+    padding: 4px 8px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .join-room-button {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .premieres-mobile-section {
+    padding: 16px 12px;
+    margin-top: 24px;
+  }
+
+  .premieres-mobile-section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+  }
+
+  .premieres-mobile-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .premiere-mobile-poster {
+    height: 180px;
   }
 
   .waiting-content {
