@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './FootballPage.css';
 
 interface Match {
@@ -12,7 +12,8 @@ interface Match {
 }
 
 export const FootballPage: React.FC = () => {
-  const [upcomingMatches] = useState<Match[]>([
+  // РПЛ и важные ближайшие матчи (слева)
+  const [rplMatches] = useState<Match[]>([
     {
       id: '1',
       date: '2026-02-20',
@@ -40,22 +41,44 @@ export const FootballPage: React.FC = () => {
       tournament: 'РПЛ',
       status: 'upcoming',
     },
+  ]);
+
+  // Европейские турниры и Лига Чемпионов (справа)
+  const [europeanMatches] = useState<Match[]>([
     {
-      id: '4',
-      date: '2026-03-01',
-      time: '20:00',
-      homeTeam: 'Рубин',
-      awayTeam: 'Ростов',
-      tournament: 'РПЛ',
+      id: '6',
+      date: '2026-02-18',
+      time: '22:00',
+      homeTeam: 'Реал Мадрид',
+      awayTeam: 'Манчестер Сити',
+      tournament: 'Лига Чемпионов',
       status: 'upcoming',
     },
     {
-      id: '5',
-      date: '2026-03-05',
-      time: '19:30',
-      homeTeam: 'Сочи',
-      awayTeam: 'Урал',
-      tournament: 'РПЛ',
+      id: '7',
+      date: '2026-02-19',
+      time: '22:00',
+      homeTeam: 'Барселона',
+      awayTeam: 'Бавария',
+      tournament: 'Лига Чемпионов',
+      status: 'upcoming',
+    },
+    {
+      id: '8',
+      date: '2026-02-21',
+      time: '21:00',
+      homeTeam: 'ПСЖ',
+      awayTeam: 'Ливерпуль',
+      tournament: 'Лига Чемпионов',
+      status: 'upcoming',
+    },
+    {
+      id: '9',
+      date: '2026-02-23',
+      time: '20:00',
+      homeTeam: 'Челси',
+      awayTeam: 'Арсенал',
+      tournament: 'Лига Европы',
       status: 'upcoming',
     },
   ]);
@@ -107,33 +130,69 @@ export const FootballPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Ближайшие матчи */}
+        {/* Ближайшие матчи - два пула */}
         <div className="matches-section">
           <h2>📅 Ближайшие матчи</h2>
-          <div className="matches-list">
-            {upcomingMatches.map((match) => (
-              <div key={match.id} className="match-card">
-                <div className="match-header">
-                  <span className="match-tournament">{match.tournament}</span>
-                  <span className="match-status">{match.status === 'upcoming' ? 'Предстоящий' : match.status === 'live' ? 'В прямом эфире' : 'Завершен'}</span>
-                </div>
-                <div className="match-teams">
-                  <div className="team home-team">
-                    <span className="team-name">{match.homeTeam}</span>
+          <div className="matches-pools">
+            {/* Левый пул: РПЛ и важные матчи */}
+            <div className="matches-pool">
+              <h3 className="pool-title">🇷🇺 РПЛ и важные матчи</h3>
+              <div className="matches-list">
+                {rplMatches.map((match) => (
+                  <div key={match.id} className="match-card">
+                    <div className="match-header">
+                      <span className="match-tournament">{match.tournament}</span>
+                      <span className="match-status">{match.status === 'upcoming' ? 'Предстоящий' : match.status === 'live' ? 'В прямом эфире' : 'Завершен'}</span>
+                    </div>
+                    <div className="match-teams">
+                      <div className="team home-team">
+                        <span className="team-name" title={match.homeTeam}>{match.homeTeam}</span>
+                      </div>
+                      <div className="match-vs">VS</div>
+                      <div className="team away-team">
+                        <span className="team-name" title={match.awayTeam}>{match.awayTeam}</span>
+                      </div>
+                    </div>
+                    <div className="match-date">
+                      <span className="date-icon">📅</span>
+                      <span>{formatDate(match.date)}</span>
+                      <span className="time-separator">•</span>
+                      <span className="match-time">{match.time}</span>
+                    </div>
                   </div>
-                  <div className="match-vs">VS</div>
-                  <div className="team away-team">
-                    <span className="team-name">{match.awayTeam}</span>
-                  </div>
-                </div>
-                <div className="match-date">
-                  <span className="date-icon">📅</span>
-                  <span>{formatDate(match.date)}</span>
-                  <span className="time-separator">•</span>
-                  <span className="match-time">{match.time}</span>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Правый пул: Европейские турниры */}
+            <div className="matches-pool">
+              <h3 className="pool-title">🇪🇺 Европейские турниры</h3>
+              <div className="matches-list">
+                {europeanMatches.map((match) => (
+                  <div key={match.id} className="match-card">
+                    <div className="match-header">
+                      <span className="match-tournament">{match.tournament}</span>
+                      <span className="match-status">{match.status === 'upcoming' ? 'Предстоящий' : match.status === 'live' ? 'В прямом эфире' : 'Завершен'}</span>
+                    </div>
+                    <div className="match-teams">
+                      <div className="team home-team">
+                        <span className="team-name" title={match.homeTeam}>{match.homeTeam}</span>
+                      </div>
+                      <div className="match-vs">VS</div>
+                      <div className="team away-team">
+                        <span className="team-name" title={match.awayTeam}>{match.awayTeam}</span>
+                      </div>
+                    </div>
+                    <div className="match-date">
+                      <span className="date-icon">📅</span>
+                      <span>{formatDate(match.date)}</span>
+                      <span className="time-separator">•</span>
+                      <span className="match-time">{match.time}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
