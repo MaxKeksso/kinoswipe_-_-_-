@@ -216,3 +216,83 @@ func (r *UserRepository) Update(id uuid.UUID, req *models.UpdateUserRequest) err
 	return nil
 }
 
+// GetStatistics возвращает статистику пользователя
+func (r *UserRepository) GetStatistics(userID uuid.UUID) (*models.UserStatistics, error) {
+	stats := &models.UserStatistics{}
+
+	// Всего свайпов (просмотренных фильмов)
+	err := r.db.QueryRow(`
+		SELECT COUNT(*) FROM swipes WHERE user_id = $1
+	`, userID).Scan(&stats.TotalSwipes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total swipes: %w", err)
+	}
+
+	// Лайкнуто фильмов
+	err = r.db.QueryRow(`
+		SELECT COUNT(*) FROM swipes WHERE user_id = $1 AND direction = 'right'
+	`, userID).Scan(&stats.LikedMovies)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get liked movies: %w", err)
+	}
+
+	// Дизлайкнуто фильмов
+	err = r.db.QueryRow(`
+		SELECT COUNT(*) FROM swipes WHERE user_id = $1 AND direction = 'left'
+	`, userID).Scan(&stats.DislikedMovies)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get disliked movies: %w", err)
+	}
+
+	// Всего мэтчей (комнаты где пользователь участвовал и был мэтч)
+	err = r.db.QueryRow(`
+		SELECT COUNT(DISTINCT m.id)
+		FROM matches m
+		INNER JOIN room_members rm ON m.room_id = rm.room_id
+		WHERE rm.user_id = $1
+	`, userID).Scan(&stats.TotalMatches)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total matches: %w", err)
+	}
+
+	// Создано комнат
+	err = r.db.QueryRow(`
+		SELECT COUNT(*) FROM rooms WHERE host_id = $1
+	`, userID).Scan(&stats.RoomsCreated)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get rooms created: %w", err)
+	}
+
+	// Присоединился к комнатам (включая созданные)
+	err = r.db.QueryRow(`
+		SELECT COUNT(DISTINCT room_id) FROM room_members WHERE user_id = $1
+	`, userID).Scan(&stats.RoomsJoined)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get rooms joined: %w", err)
+	}
+
+	// Активных комнат (где пользователь участник и статус = 'waiting' или 'active')
+	err = r.db.QueryRow(`
+		SELECT COUNT(DISTINCT r.id)
+		FROM rooms r
+		INNER JOIN room_members rm ON r.id = rm.room_id
+		WHERE rm.user_id = $1 AND r.status IN ('waiting', 'active')
+	`, userID).Scan(&stats.ActiveRooms)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get active rooms: %w", err)
+	}
+
+	// Завершенных комнат
+	err = r.db.QueryRow(`
+		SELECT COUNT(DISTINCT r.id)
+		FROM rooms r
+		INNER JOIN room_members rm ON r.id = rm.room_id
+		WHERE rm.user_id = $1 AND r.status = 'completed'
+	`, userID).Scan(&stats.CompletedRooms)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get completed rooms: %w", err)
+	}
+
+	return stats, nil
+}
+

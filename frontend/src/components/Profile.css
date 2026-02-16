@@ -180,6 +180,18 @@
   font-size: 14px;
 }
 
+.stats-loading,
+.stats-error {
+  text-align: center;
+  padding: 40px 20px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+}
+
+.stats-error {
+  color: rgba(255, 200, 200, 0.9);
+}
+
 .profile-actions {
   margin-top: 30px;
   text-align: center;
@@ -194,6 +206,25 @@
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
 
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 15px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
   .stats-grid {
     grid-template-columns: 1fr;
   }

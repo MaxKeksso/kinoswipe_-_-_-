@@ -105,3 +105,22 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	respondWithJSON(w, http.StatusOK, user)
 }
+
+// GetUserStatistics возвращает статистику пользователя
+func (h *UserHandler) GetUserStatistics(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Неверный ID пользователя")
+		return
+	}
+
+	stats, err := h.userRepo.GetStatistics(userID)
+	if err != nil {
+		log.Printf("Error getting user statistics: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Ошибка получения статистики")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, stats)
+}

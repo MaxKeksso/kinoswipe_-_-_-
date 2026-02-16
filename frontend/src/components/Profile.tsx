@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiService, User } from '../api/api';
+import { apiService, User, UserStatistics } from '../api/api';
 import './Profile.css';
 
 interface ProfileProps {
@@ -27,6 +27,8 @@ const GENRE_MAP: Record<string, string> = {
 
 export const Profile: React.FC<ProfileProps> = ({ user, onClose }) => {
   const [userGenres, setUserGenres] = useState<string[]>([]);
+  const [statistics, setStatistics] = useState<UserStatistics | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
     // Загружаем жанры пользователя
@@ -39,6 +41,21 @@ export const Profile: React.FC<ProfileProps> = ({ user, onClose }) => {
         console.error('Error parsing genres:', e);
       }
     }
+
+    // Загружаем статистику пользователя
+    const loadStatistics = async () => {
+      try {
+        setLoadingStats(true);
+        const stats = await apiService.getUserStatistics(user.id);
+        setStatistics(stats);
+      } catch (err) {
+        console.error('Error loading statistics:', err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    loadStatistics();
   }, [user.id]);
 
   return (
@@ -75,20 +92,50 @@ export const Profile: React.FC<ProfileProps> = ({ user, onClose }) => {
 
         <div className="profile-section">
           <h3>📊 Статистика</h3>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-value">-</div>
-              <div className="stat-label">Матчей</div>
+          {loadingStats ? (
+            <div className="stats-loading">Загрузка статистики...</div>
+          ) : statistics ? (
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-value">{statistics.total_matches}</div>
+                <div className="stat-label">Матчей</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{statistics.total_swipes}</div>
+                <div className="stat-label">Просмотрено фильмов</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{statistics.liked_movies}</div>
+                <div className="stat-label">Лайкнуто</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{statistics.disliked_movies}</div>
+                <div className="stat-label">Дизлайкнуто</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{statistics.rooms_created}</div>
+                <div className="stat-label">Создано комнат</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{statistics.rooms_joined}</div>
+                <div className="stat-label">Присоединился к комнатам</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{statistics.active_rooms}</div>
+                <div className="stat-label">Активных комнат</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{statistics.completed_rooms}</div>
+                <div className="stat-label">Завершенных комнат</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{(userGenres || []).length}</div>
+                <div className="stat-label">Выбранных жанров</div>
+              </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-value">-</div>
-              <div className="stat-label">Просмотрено фильмов</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value">{(userGenres || []).length}</div>
-              <div className="stat-label">Выбранных жанров</div>
-            </div>
-          </div>
+          ) : (
+            <div className="stats-error">Не удалось загрузить статистику</div>
+          )}
         </div>
 
         <div className="profile-actions">

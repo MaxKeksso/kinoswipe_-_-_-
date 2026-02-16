@@ -108,6 +108,17 @@ export interface MatchLink {
   updated_at: string;
 }
 
+export interface UserStatistics {
+  total_swipes: number;
+  liked_movies: number;
+  disliked_movies: number;
+  total_matches: number;
+  rooms_created: number;
+  rooms_joined: number;
+  active_rooms: number;
+  completed_rooms: number;
+}
+
 // API методы
 export const apiService = {
   // Пользователи
@@ -123,6 +134,11 @@ export const apiService = {
 
   updateUser: async (id: string, data: { username?: string; avatar_url?: string }): Promise<User> => {
     const response = await api.put<User>(`/users/${id}`, data);
+    return response.data;
+  },
+
+  getUserStatistics: async (id: string): Promise<UserStatistics> => {
+    const response = await api.get<UserStatistics>(`/users/${id}/statistics`);
     return response.data;
   },
 

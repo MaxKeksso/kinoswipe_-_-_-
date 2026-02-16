@@ -89,6 +89,7 @@ func main() {
 	api.HandleFunc("/users", userHandler.CreateUser).Methods("POST")
 	api.HandleFunc("/users/{id}", userHandler.GetUser).Methods("GET")
 	api.HandleFunc("/users/{id}", userHandler.UpdateUser).Methods("PUT")
+	api.HandleFunc("/users/{id}/statistics", userHandler.GetUserStatistics).Methods("GET")
 
 	// Room routes
 	api.HandleFunc("/rooms", roomHandler.CreateRoom).Methods("POST")

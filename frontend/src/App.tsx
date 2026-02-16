@@ -8,11 +8,12 @@ import { GenreQuestionnaire } from './components/GenreQuestionnaire';
 import { RecommendationPage } from './components/RecommendationPage';
 import { Profile } from './components/Profile';
 import { MovieLibrary } from './components/MovieLibrary';
+import { FootballPage } from './components/FootballPage';
 import { apiService, User, Room, Movie, Match, Premiere } from './api/api';
 import { useWebSocket } from './hooks/useWebSocket';
 import './App.css';
 
-type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links';
+type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football';
 
 const App: React.FC = () => {
   
@@ -912,6 +913,20 @@ const App: React.FC = () => {
     );
   }
 
+  // Рендер футбольной страницы
+  if (state === 'football') {
+    return (
+      <div className="App">
+        <FootballPage />
+        <div className="football-back-button">
+          <button onClick={() => setState('room-selection')} className="primary-button">
+            ← Назад к фильмам
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Рендер экрана авторизации
   if (state === 'auth') {
     return (
@@ -1006,6 +1021,9 @@ const App: React.FC = () => {
               )}
             </div>
             <div className="header-actions">
+              <button onClick={() => setState('football')} className="secondary-button football-button">
+                ⚽ Футбол
+              </button>
               {user && user.user_type === 'admin' && (
                 <button onClick={() => setState('admin')} className="secondary-button admin-button">
                   🔐 Админ-панель

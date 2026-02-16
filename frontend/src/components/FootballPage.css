@@ -1,0 +1,300 @@
+.football-page {
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(145deg, #5a67d8 0%, #6b46c1 40%, #553c9a 100%);
+  color: white;
+}
+
+.football-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.football-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.football-header h1 {
+  font-size: 3rem;
+  margin: 0 0 15px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.football-subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* Секция стриминговых сервисов */
+.streaming-section {
+  margin-bottom: 50px;
+}
+
+.streaming-section h2 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.streaming-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.streaming-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 30px;
+  text-decoration: none;
+  color: white;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.streaming-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.streaming-logo {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.streaming-card h3 {
+  font-size: 1.8rem;
+  margin: 0 0 15px 0;
+  color: white;
+}
+
+.streaming-card p {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0 0 20px 0;
+  line-height: 1.6;
+}
+
+.streaming-link {
+  margin-top: auto;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: underline;
+}
+
+.okko-card {
+  background: linear-gradient(135deg, rgba(255, 87, 34, 0.3) 0%, rgba(255, 152, 0, 0.3) 100%);
+}
+
+.kinopoisk-card {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.3) 0%, rgba(63, 81, 181, 0.3) 100%);
+}
+
+/* Секция матчей */
+.matches-section {
+  margin-bottom: 50px;
+}
+
+.matches-section h2 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.matches-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.match-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 25px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.match-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.match-tournament {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.9;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 5px 12px;
+  border-radius: 20px;
+}
+
+.match-status {
+  font-size: 0.85rem;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(76, 175, 80, 0.3);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.match-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.team {
+  flex: 1;
+  text-align: center;
+}
+
+.team-name {
+  font-size: 1.3rem;
+  font-weight: 600;
+  display: block;
+}
+
+.match-vs {
+  font-size: 1.2rem;
+  font-weight: bold;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.match-date {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  opacity: 0.9;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.date-icon {
+  font-size: 1.2rem;
+}
+
+.time-separator {
+  opacity: 0.5;
+}
+
+.match-time {
+  font-weight: 600;
+}
+
+/* Информационный блок */
+.info-section {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 25px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.info-section h3 {
+  font-size: 1.5rem;
+  margin: 0 0 15px 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.info-section p {
+  font-size: 1rem;
+  line-height: 1.6;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .football-container {
+    padding: 20px 15px;
+  }
+
+  .football-header h1 {
+    font-size: 2rem;
+  }
+
+  .streaming-cards {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .matches-list {
+    grid-template-columns: 1fr;
+  }
+
+  .match-teams {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .match-vs {
+    transform: rotate(90deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .football-page {
+    padding: 15px 10px;
+  }
+
+  .football-container {
+    padding: 15px 10px;
+  }
+
+  .football-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .football-subtitle {
+    font-size: 1rem;
+  }
+
+  .streaming-card {
+    padding: 20px;
+  }
+
+  .streaming-logo {
+    font-size: 3rem;
+  }
+
+  .match-card {
+    padding: 20px;
+  }
+
+  .streaming-section h2,
+  .matches-section h2 {
+    font-size: 1.5rem;
+  }
+}

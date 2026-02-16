@@ -494,6 +494,37 @@ button {
   border-color: rgba(255, 193, 7, 0.7) !important;
 }
 
+.football-button {
+  background: rgba(76, 175, 80, 0.3) !important;
+  border-color: rgba(76, 175, 80, 0.5) !important;
+}
+
+.football-button:hover:not(:disabled) {
+  background: rgba(76, 175, 80, 0.4) !important;
+  border-color: rgba(76, 175, 80, 0.7) !important;
+}
+
+.football-back-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.football-back-button .primary-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 12px 24px;
+  font-size: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.football-back-button .primary-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
 .swipe-actions {
   display: flex;
   justify-content: center;
