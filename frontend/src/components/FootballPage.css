@@ -131,9 +131,10 @@
 .matches-pools {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 25px;
   width: 100%;
   box-sizing: border-box;
+  align-items: start;
 }
 
 .matches-pool {
@@ -163,7 +164,7 @@
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
   border-radius: 15px;
-  padding: 18px 15px;
+  padding: 20px 15px;
   border: 2px solid rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
@@ -184,9 +185,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
+  margin-bottom: 15px;
+  padding-bottom: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .match-tournament {
@@ -199,42 +202,43 @@
 }
 
 .match-status {
-  font-size: 0.85rem;
-  padding: 5px 12px;
+  font-size: 0.8rem;
+  padding: 4px 10px;
   border-radius: 20px;
   background: rgba(76, 175, 80, 0.3);
   color: rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .match-teams {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   margin-bottom: 15px;
   gap: 8px;
-  flex-wrap: wrap;
   width: 100%;
   box-sizing: border-box;
 }
 
 .team {
-  flex: 1 1 auto;
+  width: 100%;
   text-align: center;
-  min-width: 80px;
-  max-width: 45%;
   box-sizing: border-box;
-  padding: 0 5px;
+  padding: 0 10px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .team-name {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  line-height: 1.4;
+  line-height: 1.3;
   max-width: 100%;
   text-align: center;
   white-space: normal;
@@ -242,17 +246,18 @@
   hyphens: auto;
   overflow: visible;
   text-overflow: clip;
+  padding: 0 5px;
 }
 
 .match-vs {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: bold;
   opacity: 0.7;
   flex-shrink: 0;
-  padding: 0 4px;
+  padding: 4px 0;
   white-space: nowrap;
-  min-width: 30px;
   text-align: center;
+  width: 100%;
 }
 
 .match-date {
@@ -330,16 +335,16 @@
   }
 
   .match-teams {
-    flex-direction: row;
-    gap: 8px;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .team-name {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
   }
 
   .match-vs {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
 }
 
