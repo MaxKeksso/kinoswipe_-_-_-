@@ -46,7 +46,8 @@ type MovieAPIConfig struct {
 }
 
 type FootballAPIConfig struct {
-	Key string
+	Key           string // Football-Data.org ключ
+	APISportKey   string // API-sport.ru ключ для точного времени РПЛ
 }
 
 type WebSocketConfig struct {
@@ -110,7 +111,8 @@ func Load() (*Config, error) {
 			URL: getEnv("MOVIE_API_URL", ""),
 		},
 		FootballAPI: FootballAPIConfig{
-			Key: getEnv("FOOTBALL_API_KEY", ""),
+			Key:         getEnv("FOOTBALL_API_KEY", ""),
+			APISportKey: getEnv("API_SPORT_KEY", ""),
 		},
 		WebSocket: WebSocketConfig{
 			ReadBufferSize:  getEnvAsInt("WS_READ_BUFFER_SIZE", 1024),
