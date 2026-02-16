@@ -144,33 +144,52 @@ func (s *FootballService) fetchChampionsLeagueMatches() ([]FootballMatch, error)
 	
 	url := fmt.Sprintf("%s/competitions/%s/matches", s.apiBaseURL, competitionID)
 	
+	log.Printf("Fetching matches from API: %s", url)
+	
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
+		log.Printf("Error creating request: %v", err)
 		return nil, err
 	}
 	
-	req.Header.Set("X-Auth-Token", s.apiKey)
+	if s.apiKey != "" {
+		req.Header.Set("X-Auth-Token", s.apiKey)
+		log.Printf("Using API key for authentication")
+	} else {
+		log.Printf("No API key provided, using free tier")
+	}
 	
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
+		log.Printf("Error making request: %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	
+	log.Printf("API response status: %d", resp.StatusCode)
+	
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned status %d", resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("API error response: %s", string(body))
+		return nil, fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
 	}
 	
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		log.Printf("Error reading response body: %v", err)
 		return nil, err
 	}
 	
+	log.Printf("Received %d bytes from API", len(body))
+	
 	var apiResponse FootballDataResponse
 	if err := json.Unmarshal(body, &apiResponse); err != nil {
+		log.Printf("Error unmarshaling JSON: %v", err)
 		return nil, err
 	}
+	
+	log.Printf("Parsed %d matches from API", len(apiResponse.Matches))
 	
 	matches := make([]FootballMatch, 0)
 	now := time.Now()
@@ -204,6 +223,8 @@ func (s *FootballService) fetchChampionsLeagueMatches() ([]FootballMatch, error)
 			MatchDate:  matchDate,
 		}
 		
+		log.Printf("Match: %s vs %s on %s at %s (%s)", match.HomeTeam, match.AwayTeam, match.Date, match.Time, match.Status)
+		
 		if m.Score.FullTime.HomeTeam != nil {
 			match.HomeScore = m.Score.FullTime.HomeTeam
 		}
@@ -213,6 +234,8 @@ func (s *FootballService) fetchChampionsLeagueMatches() ([]FootballMatch, error)
 		
 		matches = append(matches, match)
 	}
+	
+	log.Printf("Filtered to %d upcoming matches (within 30 days)", len(matches))
 	
 	return matches, nil
 }

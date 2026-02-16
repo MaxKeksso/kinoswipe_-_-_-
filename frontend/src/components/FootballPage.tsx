@@ -24,17 +24,29 @@ export const FootballPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
+      console.log('Loading football matches from API...');
       const response = await apiService.getFootballMatches();
       
+      console.log('Received response:', response);
+      
       if (response.rpl) {
+        console.log(`Loaded ${response.rpl.length} RPL matches`);
         setRplMatches(response.rpl);
+      } else {
+        console.log('No RPL matches in response');
+        setRplMatches([]);
       }
+      
       if (response.european) {
+        console.log(`Loaded ${response.european.length} European matches`);
         setEuropeanMatches(response.european);
+      } else {
+        console.log('No European matches in response');
+        setEuropeanMatches([]);
       }
     } catch (err) {
       console.error('Error loading matches:', err);
-      setError('Не удалось загрузить данные о матчах');
+      setError('Не удалось загрузить данные о матчах. Проверьте консоль для деталей.');
     } finally {
       setLoading(false);
     }
