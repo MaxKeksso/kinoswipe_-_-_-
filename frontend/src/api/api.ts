@@ -119,6 +119,23 @@ export interface UserStatistics {
   completed_rooms: number;
 }
 
+export interface FootballMatch {
+  id: string;
+  date: string;
+  time: string;
+  homeTeam: string;
+  awayTeam: string;
+  tournament: string;
+  status: 'upcoming' | 'live' | 'finished';
+  homeScore?: number;
+  awayScore?: number;
+}
+
+export interface FootballMatchesResponse {
+  rpl?: FootballMatch[];
+  european?: FootballMatch[];
+}
+
 // API методы
 export const apiService = {
   // Пользователи
@@ -291,22 +308,5 @@ export const apiService = {
     return response.data;
   },
 };
-
-export interface FootballMatch {
-  id: string;
-  date: string;
-  time: string;
-  homeTeam: string;
-  awayTeam: string;
-  tournament: string;
-  status: 'upcoming' | 'live' | 'finished';
-  homeScore?: number;
-  awayScore?: number;
-}
-
-export interface FootballMatchesResponse {
-  rpl?: FootballMatch[];
-  european?: FootballMatch[];
-}
 
 export default api;

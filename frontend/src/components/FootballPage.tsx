@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './FootballPage.css';
-import apiService, { FootballMatch } from '../api/api';
+import { apiService, FootballMatch } from '../api/api';
 
 export const FootballPage: React.FC = () => {
   const [rplMatches, setRplMatches] = useState<FootballMatch[]>([]);
