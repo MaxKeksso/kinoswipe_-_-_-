@@ -129,11 +129,12 @@
 }
 
 .matches-pools {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
   width: 100%;
   box-sizing: border-box;
+  align-items: start;
 }
 
 .matches-pool {
@@ -152,9 +153,9 @@
 }
 
 .matches-list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -328,8 +329,9 @@
   }
 
   .matches-list {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .match-teams {
