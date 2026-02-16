@@ -53,12 +53,19 @@ export const FootballPage: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Парсим дату в формате YYYY-MM-DD и добавляем время для правильного отображения
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     return date.toLocaleDateString('ru-RU', { 
       weekday: 'long', 
       day: 'numeric', 
       month: 'long' 
     });
+  };
+
+  const formatTime = (timeString: string) => {
+    // Время уже приходит в московском формате HH:MM
+    return timeString;
   };
 
   return (
