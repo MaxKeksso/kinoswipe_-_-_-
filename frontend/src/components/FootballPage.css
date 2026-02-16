@@ -129,12 +129,11 @@
 }
 
 .matches-pools {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
   width: 100%;
   box-sizing: border-box;
-  align-items: start;
 }
 
 .matches-pool {
@@ -153,9 +152,9 @@
 }
 
 .matches-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -329,8 +328,7 @@
   }
 
   .matches-list {
-    display: flex;
-    flex-direction: column;
+    grid-template-columns: repeat(2, 1fr);
     gap: 15px;
   }
 
@@ -380,5 +378,10 @@
   .streaming-section h2,
   .matches-section h2 {
     font-size: 1.5rem;
+  }
+
+  .matches-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
