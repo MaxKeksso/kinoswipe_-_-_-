@@ -1,87 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './FootballPage.css';
-
-interface Match {
-  id: string;
-  date: string;
-  time: string;
-  homeTeam: string;
-  awayTeam: string;
-  tournament: string;
-  status: 'upcoming' | 'live' | 'finished';
-}
+import apiService, { FootballMatch } from '../api/api';
 
 export const FootballPage: React.FC = () => {
-  // РПЛ и важные ближайшие матчи (слева)
-  const [rplMatches] = useState<Match[]>([
-    {
-      id: '1',
-      date: '2026-02-20',
-      time: '20:00',
-      homeTeam: 'Спартак',
-      awayTeam: 'Зенит',
-      tournament: 'РПЛ',
-      status: 'upcoming',
-    },
-    {
-      id: '2',
-      date: '2026-02-22',
-      time: '19:00',
-      homeTeam: 'ЦСКА',
-      awayTeam: 'Краснодар',
-      tournament: 'РПЛ',
-      status: 'upcoming',
-    },
-    {
-      id: '3',
-      date: '2026-02-25',
-      time: '18:30',
-      homeTeam: 'Локомотив',
-      awayTeam: 'Динамо',
-      tournament: 'РПЛ',
-      status: 'upcoming',
-    },
-  ]);
+  const [rplMatches, setRplMatches] = useState<FootballMatch[]>([]);
+  const [europeanMatches, setEuropeanMatches] = useState<FootballMatch[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Европейские турниры и Лига Чемпионов (справа)
-  const [europeanMatches] = useState<Match[]>([
-    {
-      id: '6',
-      date: '2026-02-18',
-      time: '22:00',
-      homeTeam: 'Реал Мадрид',
-      awayTeam: 'Манчестер Сити',
-      tournament: 'Лига Чемпионов',
-      status: 'upcoming',
-    },
-    {
-      id: '7',
-      date: '2026-02-19',
-      time: '22:00',
-      homeTeam: 'Барселона',
-      awayTeam: 'Бавария',
-      tournament: 'Лига Чемпионов',
-      status: 'upcoming',
-    },
-    {
-      id: '8',
-      date: '2026-02-21',
-      time: '21:00',
-      homeTeam: 'ПСЖ',
-      awayTeam: 'Ливерпуль',
-      tournament: 'Лига Чемпионов',
-      status: 'upcoming',
-    },
-    {
-      id: '9',
-      date: '2026-02-23',
-      time: '20:00',
-      homeTeam: 'Челси',
-      awayTeam: 'Арсенал',
-      tournament: 'Лига Европы',
-      status: 'upcoming',
-    },
-  ]);
+  useEffect(() => {
+    loadMatches();
+    
+    // Автоматическое обновление каждые 5 минут
+    const interval = setInterval(() => {
+      loadMatches();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadMatches = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await apiService.getFootballMatches();
+      
+      if (response.rpl) {
+        setRplMatches(response.rpl);
+      }
+      if (response.european) {
+        setEuropeanMatches(response.european);
+      }
+    } catch (err) {
+      console.error('Error loading matches:', err);
+      setError('Не удалось загрузить данные о матчах');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -133,12 +90,18 @@ export const FootballPage: React.FC = () => {
         {/* Ближайшие матчи - два пула */}
         <div className="matches-section">
           <h2>📅 Ближайшие матчи</h2>
-          <div className="matches-pools">
-            {/* Левый пул: РПЛ и важные матчи */}
-            <div className="matches-pool">
-              <h3 className="pool-title">🇷🇺 РПЛ и важные матчи</h3>
-              <div className="matches-list">
-                {rplMatches.map((match) => (
+          {loading && <p style={{ textAlign: 'center', opacity: 0.7 }}>Загрузка матчей...</p>}
+          {error && <p style={{ textAlign: 'center', color: '#ff6b6b' }}>{error}</p>}
+          {!loading && !error && (
+            <div className="matches-pools">
+              {/* Левый пул: РПЛ и важные матчи */}
+              <div className="matches-pool">
+                <h3 className="pool-title">🇷🇺 РПЛ и важные матчи</h3>
+                <div className="matches-list">
+                  {rplMatches.length === 0 ? (
+                    <p style={{ textAlign: 'center', opacity: 0.7 }}>Нет предстоящих матчей</p>
+                  ) : (
+                    rplMatches.map((match) => (
                   <div key={match.id} className="match-card">
                     <div className="match-header">
                       <span className="match-tournament">{match.tournament}</span>
@@ -159,16 +122,20 @@ export const FootballPage: React.FC = () => {
                       <span className="time-separator">•</span>
                       <span className="match-time">{match.time}</span>
                     </div>
-                  </div>
-                ))}
+                    </div>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Правый пул: Европейские турниры */}
-            <div className="matches-pool">
-              <h3 className="pool-title">🇪🇺 Европейские турниры</h3>
-              <div className="matches-list">
-                {europeanMatches.map((match) => (
+              {/* Правый пул: Европейские турниры */}
+              <div className="matches-pool">
+                <h3 className="pool-title">🇪🇺 Европейские турниры</h3>
+                <div className="matches-list">
+                  {europeanMatches.length === 0 ? (
+                    <p style={{ textAlign: 'center', opacity: 0.7 }}>Нет предстоящих матчей</p>
+                  ) : (
+                    europeanMatches.map((match) => (
                   <div key={match.id} className="match-card">
                     <div className="match-header">
                       <span className="match-tournament">{match.tournament}</span>
@@ -189,11 +156,13 @@ export const FootballPage: React.FC = () => {
                       <span className="time-separator">•</span>
                       <span className="match-time">{match.time}</span>
                     </div>
-                  </div>
-                ))}
+                    </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Информационный блок */}

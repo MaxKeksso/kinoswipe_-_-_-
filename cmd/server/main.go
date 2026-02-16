@@ -47,6 +47,7 @@ func main() {
 
 	// Инициализация сервисов
 	matchService := service.NewMatchService(matchRepo, swipeRepo, roomRepo, movieRepo, userRepo)
+	footballService := service.NewFootballService(cfg.FootballAPI.Key)
 
 	// Инициализация handlers
 	userHandler := handlers.NewUserHandler(userRepo)
@@ -59,6 +60,7 @@ func main() {
 	feedbackHandler := handlers.NewFeedbackHandler(feedbackRepo)
 	premiereHandler := handlers.NewPremiereHandler(premiereRepo)
 	matchLinkHandler := handlers.NewMatchLinkHandler(matchLinkRepo)
+	footballHandler := handlers.NewFootballHandler(footballService)
 
 	// Инициализация WebSocket Hub
 	wsHub := handlers.NewHub()
@@ -132,6 +134,10 @@ func main() {
 	api.HandleFunc("/premieres", premiereHandler.CreatePremiere).Methods("POST")
 	api.HandleFunc("/premieres/{id}", premiereHandler.UpdatePremiere).Methods("PUT")
 	api.HandleFunc("/premieres/{id}", premiereHandler.DeletePremiere).Methods("DELETE")
+
+	// Football routes
+	api.HandleFunc("/football/matches", footballHandler.GetMatches).Methods("GET")
+	api.HandleFunc("/football/refresh", footballHandler.RefreshMatches).Methods("POST")
 
 	// Feedback routes
 	api.HandleFunc("/feedbacks", feedbackHandler.CreateFeedback).Methods("POST")

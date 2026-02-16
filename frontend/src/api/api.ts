@@ -278,6 +278,35 @@ export const apiService = {
     const response = await api.post<MatchLink>(`/matches/${matchId}/links`, link);
     return response.data;
   },
+
+  // Футбольные матчи
+  getFootballMatches: async (league?: 'RPL' | 'CL' | 'EU'): Promise<FootballMatchesResponse> => {
+    const params = league ? `?league=${league}` : '';
+    const response = await api.get<FootballMatchesResponse>(`/football/matches${params}`);
+    return response.data;
+  },
+
+  refreshFootballMatches: async (): Promise<{ status: string; message: string }> => {
+    const response = await api.post<{ status: string; message: string }>('/football/refresh');
+    return response.data;
+  },
 };
+
+export interface FootballMatch {
+  id: string;
+  date: string;
+  time: string;
+  homeTeam: string;
+  awayTeam: string;
+  tournament: string;
+  status: 'upcoming' | 'live' | 'finished';
+  homeScore?: number;
+  awayScore?: number;
+}
+
+export interface FootballMatchesResponse {
+  rpl?: FootballMatch[];
+  european?: FootballMatch[];
+}
 
 export default api;

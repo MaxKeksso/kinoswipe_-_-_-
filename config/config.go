@@ -12,11 +12,12 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	JWT      JWTConfig
-	MovieAPI MovieAPIConfig
-	WebSocket WebSocketConfig
+	Server     ServerConfig
+	Database   DatabaseConfig
+	JWT        JWTConfig
+	MovieAPI   MovieAPIConfig
+	FootballAPI FootballAPIConfig
+	WebSocket  WebSocketConfig
 }
 
 type ServerConfig struct {
@@ -42,6 +43,10 @@ type JWTConfig struct {
 type MovieAPIConfig struct {
 	Key string
 	URL string
+}
+
+type FootballAPIConfig struct {
+	Key string
 }
 
 type WebSocketConfig struct {
@@ -103,6 +108,9 @@ func Load() (*Config, error) {
 		MovieAPI: MovieAPIConfig{
 			Key: getEnv("MOVIE_API_KEY", ""),
 			URL: getEnv("MOVIE_API_URL", ""),
+		},
+		FootballAPI: FootballAPIConfig{
+			Key: getEnv("FOOTBALL_API_KEY", ""),
 		},
 		WebSocket: WebSocketConfig{
 			ReadBufferSize:  getEnvAsInt("WS_READ_BUFFER_SIZE", 1024),
