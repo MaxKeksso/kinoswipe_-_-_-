@@ -1111,7 +1111,7 @@ const App: React.FC = () => {
           {error && <p className="error-message">{error}</p>}
 
           {/* Премьеры (отображаются внизу страницы) */}
-          {activePremieres.length > 0 ? (
+          {activePremieres.length > 0 && (
             <div className="premieres-mobile-section">
               <h2>🎬 Новые премьеры</h2>
               <div className="premieres-mobile-grid">
@@ -1142,18 +1142,6 @@ const App: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </div>
-          ) : premieresList.length > 0 ? (
-            <div className="premieres-mobile-section" style={{ background: 'rgba(255, 0, 0, 0.2)', padding: '15px', borderRadius: '10px' }}>
-              <p style={{ color: 'white', textAlign: 'center' }}>
-                ⚠️ Есть {premieresList.length} премьер(ы), но все неактивны.
-              </p>
-            </div>
-          ) : (
-            <div className="premieres-mobile-section" style={{ background: 'rgba(255, 193, 7, 0.2)', padding: '15px', borderRadius: '10px' }}>
-              <p style={{ color: 'white', textAlign: 'center' }}>
-                ℹ️ Премьеры не загружены.
-              </p>
             </div>
           )}
 
