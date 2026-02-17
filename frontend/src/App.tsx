@@ -1033,6 +1033,11 @@ const App: React.FC = () => {
               <button onClick={() => setState('football')} className="secondary-button football-button">
                 ⚽ Футбол
               </button>
+              {user && user.user_type === 'admin' && (
+                <button onClick={() => setState('admin')} className="secondary-button admin-button">
+                  🔐 Админ-панель
+                </button>
+              )}
               {user && user.email && (
                 <button onClick={() => setShowProfile(true)} className="secondary-button">
                   👤 Профиль
@@ -1141,13 +1146,13 @@ const App: React.FC = () => {
           ) : premieresList.length > 0 ? (
             <div className="premieres-mobile-section" style={{ background: 'rgba(255, 0, 0, 0.2)', padding: '15px', borderRadius: '10px' }}>
               <p style={{ color: 'white', textAlign: 'center' }}>
-                ⚠️ Есть {premieresList.length} премьер(ы), но все неактивны. Активируйте их в админ-панели.
+                ⚠️ Есть {premieresList.length} премьер(ы), но все неактивны.
               </p>
             </div>
           ) : (
             <div className="premieres-mobile-section" style={{ background: 'rgba(255, 193, 7, 0.2)', padding: '15px', borderRadius: '10px' }}>
               <p style={{ color: 'white', textAlign: 'center' }}>
-                ℹ️ Премьеры не загружены. Добавьте их через админ-панель (🔐 Админ-панель → Премьеры).
+                ℹ️ Премьеры не загружены.
               </p>
             </div>
           )}
