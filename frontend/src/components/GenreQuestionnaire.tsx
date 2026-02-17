@@ -81,7 +81,8 @@ export const GenreQuestionnaire: React.FC<GenreQuestionnaireProps> = ({ onComple
                 aria-pressed={isSelected}
                 aria-label={`${genre.name}${isSelected ? ', выбрано' : ''}`}
               >
-                <span className="genre-name">{genre.name}</span>
+                {/* Название жанра всегда видно до нажатия */}
+                <span className="genre-card-label">{genre.name}</span>
                 <span className="genre-icon">{genre.icon}</span>
                 {isSelected && <span className="check-mark" aria-hidden>✓</span>}
               </button>

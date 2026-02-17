@@ -97,14 +97,17 @@
   min-height: 120px;
 }
 
-/* Название жанра всегда видно с самого начала (не только после выбора) */
-.genre-name {
+/* Название жанра всегда видно с самого начала, до нажатия (уникальный класс, чтобы не перебивали другие стили) */
+.genre-questionnaire .genre-card .genre-card-label {
+  display: block !important;
   font-size: 1rem;
   font-weight: 600;
   text-align: center;
   color: #2d3748;
-  opacity: 1;
-  visibility: visible;
+  opacity: 1 !important;
+  visibility: visible !important;
+  min-height: 1.5em;
+  order: -1; /* сначала текст, потом иконка */
 }
 
 .genre-card:hover {
@@ -125,7 +128,7 @@
   line-height: 1;
 }
 
-.genre-card.selected .genre-name {
+.genre-questionnaire .genre-card.selected .genre-card-label {
   color: white;
 }
 

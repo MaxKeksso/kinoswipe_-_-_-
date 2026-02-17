@@ -1033,11 +1033,6 @@ const App: React.FC = () => {
               <button onClick={() => setState('football')} className="secondary-button football-button">
                 ⚽ Футбол
               </button>
-              {user && user.user_type === 'admin' && (
-                <button onClick={() => setState('admin')} className="secondary-button admin-button">
-                  🔐 Админ-панель
-                </button>
-              )}
               {user && user.email && (
                 <button onClick={() => setShowProfile(true)} className="secondary-button">
                   👤 Профиль
