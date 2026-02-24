@@ -75,8 +75,8 @@ const AIMediatorPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const compatibility = () => {
     const a = new Set(profiles[0].genres);
     const b = new Set(profiles[1].genres);
-    const shared = [...a].filter(g => b.has(g)).length;
-    const total = new Set([...a, ...b]).size;
+    const shared = Array.from(a).filter(g => b.has(g)).length;
+    const total = new Set(Array.from(a).concat(Array.from(b))).size;
     return total === 0 ? 0 : Math.round((shared / total) * 100);
   };
 
