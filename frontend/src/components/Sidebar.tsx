@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 import { User } from '../api/api';
+import { Theme } from '../hooks/useTheme';
 
 type AppState =
   | 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting'
@@ -15,6 +16,8 @@ interface SidebarProps {
   onLibrary: () => void;
   onProfile: () => void;
   user: User | null;
+  theme: Theme;
+  onToggleTheme: () => void;
 }
 
 interface NavItem {
@@ -57,10 +60,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLibrary,
   onProfile,
   user,
+  theme,
+  onToggleTheme,
 }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  const inRoom = ['room-waiting', 'swiping', 'match-links'].includes(currentState);
 
   const handleNav = (state: AppState) => {
     onNavigate(state);
@@ -68,6 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const avatarLetter = user?.username?.charAt(0)?.toUpperCase() ?? '?';
+  const isDark = theme === 'dark';
 
   return (
     <>
@@ -81,8 +85,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ☰
         </button>
         <span className="mobile-topbar-logo">🎬 KinoSwipe</span>
-        <div className="mobile-topbar-avatar" onClick={user?.email ? onProfile : undefined}>
-          {avatarLetter}
+        <div className="mobile-topbar-right">
+          <button
+            className="mobile-theme-btn"
+            onClick={onToggleTheme}
+            aria-label={isDark ? 'Светлая тема' : 'Тёмная тема'}
+            title={isDark ? 'Светлая тема' : 'Тёмная тема'}
+          >
+            {isDark ? '☀️' : '🌙'}
+          </button>
+          <div className="mobile-topbar-avatar" onClick={user?.email ? onProfile : undefined}>
+            {avatarLetter}
+          </div>
         </div>
       </header>
 
@@ -143,8 +157,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </nav>
 
-        {/* Footer: user + logout */}
+        {/* Footer: theme toggle + user + logout */}
         <div className="sidebar-footer">
+          {/* Переключатель темы */}
+          <button className="sidebar-theme-toggle" onClick={onToggleTheme}>
+            <span className="sidebar-nav-icon">{isDark ? '☀️' : '🌙'}</span>
+            <span className="sidebar-nav-label">{isDark ? 'Светлая тема' : 'Тёмная тема'}</span>
+          </button>
+
           {user && (
             <button
               className="sidebar-user"
@@ -190,9 +210,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span>⚽</span>
           <span>Футбол</span>
         </button>
-        <button className="mobile-nav-item" onClick={() => setMobileOpen(true)}>
-          <span>☰</span>
-          <span>Ещё</span>
+        <button
+          className="mobile-nav-item"
+          onClick={onToggleTheme}
+          title={isDark ? 'Светлая тема' : 'Тёмная тема'}
+        >
+          <span>{isDark ? '☀️' : '🌙'}</span>
+          <span>Тема</span>
         </button>
       </nav>
     </>

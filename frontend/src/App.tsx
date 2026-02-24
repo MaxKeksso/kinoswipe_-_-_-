@@ -19,6 +19,7 @@ import EveningRecipePage from './components/EveningRecipePage';
 import { apiService, authStorage, setApiErrorHandler, User, Room, Movie, Match, Premiere } from './api/api';
 import { getMovieDisplayTitle } from './utils/movieRussian';
 import { useWebSocket } from './hooks/useWebSocket';
+import { useTheme } from './hooks/useTheme';
 import { Sidebar } from './components/Sidebar';
 import './App.css';
 
@@ -29,7 +30,8 @@ const TIMEWEB_WIDGET_SRC =
 type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football' | 'split-subscribe' | 'outfit-math' | 'gift-genius' | 'ai-mediator' | 'vibe' | 'movie-roulette' | 'evening-recipe';
 
 const App: React.FC = () => {
-  
+  const { theme, toggleTheme } = useTheme();
+
   const [state, setState] = useState<AppState>('auth');
   const [user, setUser] = useState<User | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
@@ -935,6 +937,8 @@ const App: React.FC = () => {
         onLibrary={() => setShowMovieLibrary(true)}
         onProfile={() => setShowProfile(true)}
         user={user}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
       <main className="app-main">
         {pageContent}

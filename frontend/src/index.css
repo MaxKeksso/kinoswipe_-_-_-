@@ -53,6 +53,52 @@
   --transition: 0.2s ease;
 }
 
+/* ========================================================
+   Светлая тема — переопределяем только нужные переменные
+   ======================================================== */
+[data-theme="light"] {
+  --bg-base:     #eef0f9;
+  --bg-surface:  #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-card:     #f4f6ff;
+  --bg-input:    #eaecf8;
+
+  --border:        rgba(0, 0, 0, 0.09);
+  --border-hover:  rgba(124, 58, 237, 0.38);
+  --border-active: rgba(124, 58, 237, 0.68);
+
+  --accent:          #6d28d9;
+  --accent-light:    #5b21b6;
+  --accent-dark:     #4c1d95;
+  --accent-glow:     rgba(109, 40, 217, 0.14);
+  --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #a855f7 100%);
+
+  --like:         #059669;
+  --like-glow:    rgba(5, 150, 105, 0.18);
+  --dislike:      #dc2626;
+  --dislike-glow: rgba(220, 38, 38, 0.18);
+
+  --text:           #11112b;
+  --text-secondary: rgba(17, 17, 43, 0.62);
+  --text-muted:     rgba(17, 17, 43, 0.38);
+
+  --success: #059669;
+  --error:   #dc2626;
+  --warning: #b45309;
+
+  --shadow-sm:   0 1px 6px  rgba(0, 0, 0, 0.09);
+  --shadow-md:   0 4px 18px rgba(0, 0, 0, 0.11);
+  --shadow-lg:   0 12px 44px rgba(0, 0, 0, 0.13);
+  --shadow-glow: 0 0 24px rgba(109, 40, 217, 0.12);
+}
+
+[data-theme="light"] body {
+  background-color: var(--bg-base);
+  background-image:
+    radial-gradient(ellipse 160% 100% at -10% -15%, rgba(79, 70, 229, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 80%  60%  at 110% 110%, rgba(168, 85, 247, 0.04) 0%, transparent 50%);
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
