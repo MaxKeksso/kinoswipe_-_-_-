@@ -1,388 +1,390 @@
+/* ====================================================
+   FootballPage — dark theme, matches the app design
+   ==================================================== */
+
 .football-page {
   min-height: 100vh;
-  padding: 20px;
-  background: linear-gradient(145deg, #5a67d8 0%, #6b46c1 40%, #553c9a 100%);
-  color: white;
+  padding: 32px 36px 48px;
+  color: var(--text);
 }
 
 .football-container {
-  max-width: 1200px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
 }
 
+/* ---- Header ---- */
 .football-header {
-  text-align: center;
-  margin-bottom: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .football-header h1 {
-  font-size: 3rem;
-  margin: 0 0 15px 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.5px;
 }
 
 .football-subtitle {
-  font-size: 1.2rem;
-  opacity: 0.9;
+  font-size: 0.92rem;
+  color: var(--text-secondary);
   margin: 0;
 }
 
-/* Секция стриминговых сервисов */
+/* ---- Streaming section ---- */
 .streaming-section {
-  margin-bottom: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .streaming-section h2 {
-  font-size: 2rem;
-  margin-bottom: 30px;
-  text-align: center;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 0;
 }
 
 .streaming-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 30px;
-  margin-bottom: 30px;
-  width: 100%;
-  box-sizing: border-box;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
 .streaming-card {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 35px 25px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
   text-decoration: none;
-  color: white;
-  transition: all 0.3s ease;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: var(--text);
+  transition: all var(--transition);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  min-height: 300px;
-  box-sizing: border-box;
-  width: 100%;
+  gap: 10px;
 }
 
 .streaming-card:hover {
-  transform: translateY(-5px);
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  border-color: var(--border-hover);
+  background: var(--bg-card);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md), 0 0 0 1px var(--border-hover);
+  color: var(--text);
 }
 
 .streaming-logo {
-  font-size: 4rem;
-  margin-bottom: 20px;
+  font-size: 2rem;
+  line-height: 1;
 }
 
 .streaming-card h3 {
-  font-size: 1.8rem;
-  margin: 0 0 15px 0;
-  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
 }
 
 .streaming-card p {
-  font-size: 1rem;
-  opacity: 0.9;
-  margin: 0 0 25px 0;
-  line-height: 1.7;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
   flex: 1;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  padding: 0 5px;
 }
 
 .streaming-link {
-  margin-top: auto;
+  font-size: 0.88rem;
   font-weight: 600;
-  font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.95);
-  text-decoration: underline;
+  color: var(--accent-light);
+  margin-top: 4px;
+  transition: color var(--transition);
+}
+
+.streaming-card:hover .streaming-link {
+  color: var(--text);
 }
 
 .okko-card {
-  background: linear-gradient(135deg, rgba(255, 87, 34, 0.3) 0%, rgba(255, 152, 0, 0.3) 100%);
+  border-color: rgba(255, 87, 34, 0.22);
+}
+
+.okko-card:hover {
+  border-color: rgba(255, 87, 34, 0.50);
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(255, 87, 34, 0.40);
 }
 
 .kinopoisk-card {
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.3) 0%, rgba(63, 81, 181, 0.3) 100%);
+  border-color: rgba(33, 150, 243, 0.22);
 }
 
-/* Секция матчей */
+.kinopoisk-card:hover {
+  border-color: rgba(33, 150, 243, 0.50);
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(33, 150, 243, 0.40);
+}
+
+/* ---- Matches section ---- */
 .matches-section {
-  margin-bottom: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.matches-section h2 {
-  font-size: 2rem;
-  margin-bottom: 30px;
+.matches-section > h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 0;
+}
+
+.matches-loading,
+.matches-error {
+  padding: 24px;
   text-align: center;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+.matches-error {
+  color: var(--error);
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.07);
 }
 
 .matches-pools {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  width: 100%;
-  box-sizing: border-box;
   align-items: start;
 }
 
+/* ---- Pool ---- */
 .matches-pool {
-  display: flex;
-  flex-direction: column;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .pool-title {
-  font-size: 1.5rem;
-  margin: 0 0 20px 0;
-  text-align: center;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-  color: white;
-  padding-bottom: 15px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 14px 16px 12px;
+  margin: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
 }
 
 .matches-list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.match-card {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 20px 15px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  box-sizing: border-box;
-  min-height: auto;
   display: flex;
   flex-direction: column;
 }
 
-.match-card:hover {
-  transform: translateY(-3px);
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+.matches-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
 }
 
-.match-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.match-tournament {
-  font-size: 0.9rem;
-  font-weight: 600;
-  opacity: 0.9;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 5px 12px;
-  border-radius: 20px;
-}
-
-.match-status {
-  font-size: 0.8rem;
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: rgba(76, 175, 80, 0.3);
-  color: rgba(255, 255, 255, 0.95);
-  white-space: nowrap;
-  overflow: visible;
-  text-overflow: clip;
-}
-
-.match-teams {
+/* ---- Single match card ---- */
+.match-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 15px;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.team {
-  width: 100%;
-  text-align: center;
-  box-sizing: border-box;
-  padding: 0 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.team-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  line-height: 1.3;
-  max-width: 100%;
-  text-align: center;
-  white-space: normal;
-  display: block;
-  hyphens: auto;
-  overflow: visible;
-  text-overflow: clip;
-  padding: 0 5px;
-}
-
-.match-vs {
-  font-size: 0.85rem;
-  font-weight: bold;
-  opacity: 0.7;
-  flex-shrink: 0;
-  padding: 4px 0;
-  white-space: nowrap;
-  text-align: center;
-  width: 100%;
-}
-
-.match-date {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 10px;
-  font-size: 0.9rem;
-  opacity: 0.9;
-  padding-top: 15px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  flex-wrap: wrap;
-  text-align: center;
-  margin-top: auto;
 }
 
-.date-icon {
-  font-size: 1.2rem;
+.match-item:last-child {
+  border-bottom: none;
 }
 
-.time-separator {
-  opacity: 0.5;
+.match-item:hover {
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.match-time {
+.match-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.match-tournament-badge {
+  font-size: 11px;
   font-weight: 600;
+  color: var(--accent-light);
+  background: rgba(139, 92, 246, 0.14);
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
 }
 
-/* Информационный блок */
+.match-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.match-status-badge--upcoming {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  color: #fbbf24;
+}
+
+.match-status-badge--live {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  animation: livePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+
+.match-status-badge--finished {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+/* ---- Teams row ---- */
+.match-teams-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.match-team {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match-team--away {
+  text-align: right;
+}
+
+.match-score {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent-light);
+  letter-spacing: 2px;
+  flex-shrink: 0;
+  font-family: monospace;
+}
+
+.match-vs-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ---- Date/time ---- */
+.match-datetime {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.match-datetime-icon {
+  font-size: 0.85rem;
+}
+
+.match-datetime-time {
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* ---- Info section ---- */
 .info-section {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 25px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
 }
 
 .info-section h3 {
-  font-size: 1.5rem;
-  margin: 0 0 15px 0;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 10px;
 }
 
 .info-section p {
-  font-size: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
   line-height: 1.6;
-  opacity: 0.9;
   margin: 0;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-  .football-container {
-    padding: 20px 15px;
-  }
+.info-section p + p {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
 
-  .football-header h1 {
-    font-size: 2rem;
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+  .football-page {
+    padding: 20px 16px 48px;
   }
 
   .streaming-cards {
     grid-template-columns: 1fr;
-    gap: 20px;
   }
 
   .matches-pools {
     grid-template-columns: 1fr;
-    gap: 30px;
-  }
-
-  .matches-list {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .match-teams {
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .team-name {
-    font-size: 0.85rem;
-  }
-
-  .match-vs {
-    font-size: 0.8rem;
   }
 }
 
 @media (max-width: 480px) {
   .football-page {
-    padding: 15px 10px;
-  }
-
-  .football-container {
-    padding: 15px 10px;
+    padding: 16px 12px 80px;
   }
 
   .football-header h1 {
-    font-size: 1.5rem;
-  }
-
-  .football-subtitle {
-    font-size: 1rem;
+    font-size: 1.45rem;
   }
 
   .streaming-card {
-    padding: 20px;
+    padding: 18px;
   }
 
-  .streaming-logo {
-    font-size: 3rem;
-  }
-
-  .match-card {
-    padding: 20px;
-  }
-
-  .streaming-section h2,
-  .matches-section h2 {
-    font-size: 1.5rem;
-  }
-
-  .matches-list {
-    grid-template-columns: 1fr;
-    gap: 12px;
+  .match-team {
+    font-size: 0.82rem;
   }
 }

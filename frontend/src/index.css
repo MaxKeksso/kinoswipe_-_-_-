@@ -1,47 +1,56 @@
 :root {
-  --bg-base:       #0b0b14;
-  --bg-surface:    #111119;
-  --bg-elevated:   #17172a;
-  --bg-card:       #1c1c2f;
-  --bg-input:      #14141f;
+  /* ── Фоны (чёткая иерархия слоёв) ── */
+  --bg-base:       #0f1022;   /* страница */
+  --bg-surface:    #14172e;   /* сайдбар, панели */
+  --bg-elevated:   #1c1f3a;   /* карточки, контейнеры */
+  --bg-card:       #242845;   /* вложенные карточки */
+  --bg-input:      #191c34;   /* поля ввода */
 
-  --border:        rgba(139, 92, 246, 0.13);
-  --border-hover:  rgba(139, 92, 246, 0.3);
-  --border-active: rgba(139, 92, 246, 0.55);
+  /* ── Границы (нейтральный белый + фиолетовый для фокуса) ── */
+  --border:        rgba(255, 255, 255, 0.09);
+  --border-hover:  rgba(167, 139, 250, 0.48);
+  --border-active: rgba(167, 139, 250, 0.78);
 
-  --accent:        #8b5cf6;
-  --accent-light:  #a78bfa;
-  --accent-dark:   #6d28d9;
-  --accent-glow:   rgba(139, 92, 246, 0.3);
-  --accent-gradient: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 60%, #a78bfa 100%);
+  /* ── Акцент ── */
+  --accent:          #8b5cf6;
+  --accent-light:    #c4b5fd;
+  --accent-dark:     #6d28d9;
+  --accent-glow:     rgba(139, 92, 246, 0.28);
+  --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #a855f7 100%);
 
-  --like:          #10b981;
-  --like-glow:     rgba(16, 185, 129, 0.35);
-  --dislike:       #ef4444;
-  --dislike-glow:  rgba(239, 68, 68, 0.35);
+  /* ── Действия ── */
+  --like:         #10b981;
+  --like-glow:    rgba(16, 185, 129, 0.35);
+  --dislike:      #ef4444;
+  --dislike-glow: rgba(239, 68, 68, 0.35);
 
-  --text:          #e2e1ff;
-  --text-secondary: rgba(226, 225, 255, 0.58);
-  --text-muted:    rgba(226, 225, 255, 0.32);
+  /* ── Текст ── */
+  --text:           #f0f0ff;
+  --text-secondary: rgba(240, 240, 255, 0.62);
+  --text-muted:     rgba(240, 240, 255, 0.36);
 
-  --success:       #10b981;
-  --error:         #ef4444;
-  --warning:       #f59e0b;
+  /* ── Статусы ── */
+  --success: #10b981;
+  --error:   #f87171;
+  --warning: #fbbf24;
 
-  --radius-xs:     6px;
-  --radius-sm:     10px;
-  --radius-md:     14px;
-  --radius-lg:     20px;
-  --radius-xl:     28px;
+  /* ── Скруглённые углы ── */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
 
-  --sidebar-w:     240px;
+  /* ── Сетка ── */
+  --sidebar-w: 240px;
 
-  --shadow-sm:     0 2px 10px rgba(0,0,0,0.4);
-  --shadow-md:     0 8px 28px rgba(0,0,0,0.5);
-  --shadow-lg:     0 20px 60px rgba(0,0,0,0.65);
-  --shadow-glow:   0 0 28px var(--accent-glow);
+  /* ── Тени ── */
+  --shadow-sm:   0 2px 12px rgba(0, 0, 0, 0.45);
+  --shadow-md:   0 8px 30px rgba(0, 0, 0, 0.55);
+  --shadow-lg:   0 20px 60px rgba(0, 0, 0, 0.70);
+  --shadow-glow: 0 0 30px var(--accent-glow);
 
-  --transition:    0.2s ease;
+  --transition: 0.2s ease;
 }
 
 *, *::before, *::after {
@@ -58,7 +67,11 @@ html, body, #root {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', sans-serif;
-  background: var(--bg-base);
+  background-color: var(--bg-base);
+  /* тонкие световые пятна для глубины */
+  background-image:
+    radial-gradient(ellipse 160% 100% at -10% -15%, rgba(79, 70, 229, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 80%  60%  at 110% 110%, rgba(168, 85, 247, 0.07) 0%, transparent 50%);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -94,9 +107,9 @@ code {
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.22);
+  background: rgba(139, 92, 246, 0.28);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.45);
+  background: rgba(139, 92, 246, 0.50);
 }

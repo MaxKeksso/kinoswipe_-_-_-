@@ -37,6 +37,8 @@ const App: React.FC = () => {
   const [currentMovieIndex, setCurrentMovieIndex] = useState(0);
   const [matches, setMatches] = useState<Match[]>([]);
   const [lastMatch, setLastMatch] = useState<Match | null>(null);
+  // true = матч пришёл от нашего свайпа (API), false = от WebSocket (другой участник свайпнул раньше)
+  const [matchFromSwipe, setMatchFromSwipe] = useState(false);
   const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
   const [premieres, setPremieres] = useState<Premiere[]>([]);
   const [showMatchLinks, setShowMatchLinks] = useState(false);
@@ -153,7 +155,8 @@ const App: React.FC = () => {
     userId: user?.id || '',
       onMatch: (match: Match) => {
       if (!match || !(match as { id?: string }).id) return;
-      console.log('Match received:', match);
+      console.log('Match received via WebSocket:', match);
+      setMatchFromSwipe(false); // матч от другого участника — индекс уже был сдвинут
       setLastMatch(match);
       setMatches((prev) => {
         const prevMatches = Array.isArray(prev) ? prev : [];
@@ -763,6 +766,7 @@ const App: React.FC = () => {
           movie: rawMatch.movie ?? undefined,
           users: Array.isArray(rawMatch.users) ? rawMatch.users : undefined,
         };
+        setMatchFromSwipe(true);
         setLastMatch(matchData);
         setMatches((prev) => [matchData, ...safeMatchList(prev)]);
         setTimeout(() => setShowMatchLinks(true), 500);
@@ -950,11 +954,12 @@ const App: React.FC = () => {
           onClose={() => {
             setShowMatchLinks(false);
             setLastMatch(null);
-            if (movies && currentMovieIndex < movies.length - 1) {
+            // Сдвигаем только если матч пришёл от нашего свайпа (API не успел сдвинуть индекс).
+            // Если матч пришёл по WebSocket — индекс уже был сдвинут ранее, двигать не нужно.
+            if (matchFromSwipe && movies && currentMovieIndex < movies.length - 1) {
               setCurrentMovieIndex(currentMovieIndex + 1);
-            } else {
-              setError('');
             }
+            setMatchFromSwipe(false);
           }}
         />
       )}
@@ -1564,35 +1569,58 @@ const App: React.FC = () => {
         {!loading && currentMovie && movies && movies.length > 0 && (
           <>
             <div className="cardContainer">
-              {(movies || []).slice(currentMovieIndex, currentMovieIndex + 3).map((movie, index) => (
-                <SwipeCard
-                  key={movie.id}
-                  onSwipe={handleCardSwipe}
-                  preventSwipe={['up', 'down']}
-                  className="swipe"
-                >
-                  <div className="card">
-                    <img
-                      src={movie.poster_url}
-                      alt={getMovieDisplayTitle(movie)}
+              {/* Декоративная карточка сзади (3-я) */}
+              {movies[currentMovieIndex + 2] && (
+                <div className="card card--behind-2" aria-hidden="true">
+                  <img
+                    src={movies[currentMovieIndex + 2].poster_url}
+                    alt=""
                     onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(getMovieDisplayTitle(movie))}`;
-                      }}
-                    />
-                    <div className="card-info">
-                      <h3>{getMovieDisplayTitle(movie)}</h3>
-                      <div className="movie-details">
-                        {movie.year && <span>📅 {movie.year} год</span>}
-                        {movie.duration && <span>⏱ {movie.duration} мин</span>}
-                        {movie.imdb_rating && <span>⭐ IMDb: {movie.imdb_rating}</span>}
-                        {movie.kp_rating && <span>⭐ КП: {movie.kp_rating}</span>}
-                      </div>
-                      {movie.description && <p className="movie-description">{movie.description}</p>}
+                      (e.target as HTMLImageElement).style.visibility = 'hidden';
+                    }}
+                  />
+                </div>
+              )}
+              {/* Декоративная карточка сзади (2-я) */}
+              {movies[currentMovieIndex + 1] && (
+                <div className="card card--behind-1" aria-hidden="true">
+                  <img
+                    src={movies[currentMovieIndex + 1].poster_url}
+                    alt=""
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.visibility = 'hidden';
+                    }}
+                  />
+                </div>
+              )}
+              {/* Единственная интерактивная карточка — текущий фильм */}
+              <SwipeCard
+                key={currentMovie.id}
+                onSwipe={handleCardSwipe}
+                preventSwipe={['up', 'down']}
+                className="swipe"
+              >
+                <div className="card card--active">
+                  <img
+                    src={currentMovie.poster_url}
+                    alt={getMovieDisplayTitle(currentMovie)}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(getMovieDisplayTitle(currentMovie))}`;
+                    }}
+                  />
+                  <div className="card-info">
+                    <h3>{getMovieDisplayTitle(currentMovie)}</h3>
+                    <div className="movie-details">
+                      {currentMovie.year && <span>📅 {currentMovie.year} год</span>}
+                      {currentMovie.duration && <span>⏱ {currentMovie.duration} мин</span>}
+                      {currentMovie.imdb_rating && <span>⭐ IMDb: {currentMovie.imdb_rating}</span>}
+                      {currentMovie.kp_rating && <span>⭐ КП: {currentMovie.kp_rating}</span>}
                     </div>
+                    {currentMovie.description && <p className="movie-description">{currentMovie.description}</p>}
                   </div>
-                </SwipeCard>
-              ))}
+                </div>
+              </SwipeCard>
             </div>
 
             <div className="swipe-actions">

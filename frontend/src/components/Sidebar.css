@@ -16,6 +16,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   transition: transform 0.3s ease;
+  /* лёгкий градиент вдоль левой панели */
+  background-image: linear-gradient(180deg, rgba(79, 70, 229, 0.06) 0%, transparent 40%);
 }
 
 /* ---- Logo ---- */
@@ -55,7 +57,7 @@
 }
 
 .sidebar-group {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .sidebar-group-title {
@@ -63,9 +65,9 @@
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.9px;
   color: var(--text-muted);
-  padding: 8px 12px 4px;
+  padding: 10px 14px 5px;
 }
 
 .sidebar-nav-item {
@@ -76,6 +78,7 @@
   padding: 9px 12px;
   background: transparent;
   border: none;
+  border-left: 2px solid transparent;
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   font-size: 14px;
@@ -87,14 +90,16 @@
 }
 
 .sidebar-nav-item:hover {
-  background: var(--bg-elevated);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text);
 }
 
 .sidebar-nav-item.active {
-  background: rgba(139, 92, 246, 0.14);
+  background: rgba(139, 92, 246, 0.16);
   color: var(--accent-light);
   font-weight: 600;
+  border-left-color: var(--accent);
+  padding-left: 10px;
 }
 
 .sidebar-nav-item--admin {
@@ -102,13 +107,14 @@
 }
 
 .sidebar-nav-item--admin:hover {
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(245, 158, 11, 0.10);
   color: #fbbf24;
 }
 
 .sidebar-nav-item--admin.active {
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(245, 158, 11, 0.14);
   color: #fbbf24;
+  border-left-color: #f59e0b;
 }
 
 .sidebar-nav-icon {
