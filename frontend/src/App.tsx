@@ -19,6 +19,7 @@ import EveningRecipePage from './components/EveningRecipePage';
 import { apiService, authStorage, setApiErrorHandler, User, Room, Movie, Match, Premiere } from './api/api';
 import { getMovieDisplayTitle } from './utils/movieRussian';
 import { useWebSocket } from './hooks/useWebSocket';
+import { Sidebar } from './components/Sidebar';
 import './App.css';
 
 const TIMEWEB_WIDGET_SRC =
@@ -920,95 +921,106 @@ const App: React.FC = () => {
     setState('room-selection');
   };
 
-  // Рендер админ-панели
-  if (state === 'admin') {
-    return (
-      <div className="App">
-        <AdminPanel
-          onLogout={() => {
-            handleLogout();
-            setState('auth');
+  // ---- Layout helper с сайдбаром ----
+  const renderWithLayout = (pageContent: React.ReactNode) => (
+    <div className="app-layout">
+      <Sidebar
+        currentState={state}
+        onNavigate={setState}
+        onLogout={handleLogout}
+        onLibrary={() => setShowMovieLibrary(true)}
+        onProfile={() => setShowProfile(true)}
+        user={user}
+      />
+      <main className="app-main">
+        {pageContent}
+      </main>
+      {showProfile && user && (
+        <Profile user={user} onClose={() => setShowProfile(false)} />
+      )}
+      {showMovieLibrary && (
+        <MovieLibrary
+          onClose={() => setShowMovieLibrary(false)}
+          isAdmin={user?.user_type === 'admin'}
+        />
+      )}
+      {showMatchLinks && lastMatch && (
+        <MatchLinksPage
+          match={lastMatch}
+          onClose={() => {
+            setShowMatchLinks(false);
+            setLastMatch(null);
+            if (movies && currentMovieIndex < movies.length - 1) {
+              setCurrentMovieIndex(currentMovieIndex + 1);
+            } else {
+              setError('');
+            }
           }}
         />
-      </div>
+      )}
+      {showRecommendations && room && user && (
+        <RecommendationPage
+          userGenres={userGenres}
+          roomId={room.id}
+          userId={user.id}
+          onClose={() => {
+            setShowRecommendations(false);
+            handleLeaveRoom();
+          }}
+          onSelectMovie={(movie) => {
+            console.log('Selected movie:', movie);
+            setShowRecommendations(false);
+          }}
+        />
+      )}
+    </div>
+  );
+
+  // Рендер админ-панели
+  if (state === 'admin') {
+    return renderWithLayout(
+      <AdminPanel onLogout={() => { handleLogout(); setState('auth'); }} />
     );
   }
 
   // Рендер футбольной страницы
   if (state === 'football') {
-    return (
-      <div className="App">
-        <FootballPage />
-        <div className="football-back-button">
-          <button onClick={() => setState('room-selection')} className="primary-button">
-            ← Назад к фильмам
-          </button>
-        </div>
-      </div>
-    );
+    return renderWithLayout(<FootballPage />);
   }
 
   // Рендер Split & Subscribe
   if (state === 'split-subscribe') {
-    return (
-      <div className="App">
-        <SplitSubscribePage onBack={() => setState('room-selection')} />
-      </div>
-    );
+    return renderWithLayout(<SplitSubscribePage onBack={() => setState('room-selection')} />);
   }
 
   // Рендер OutfitMath
   if (state === 'outfit-math') {
-    return (
-      <div className="App">
-        <OutfitMathPage onBack={() => setState('room-selection')} />
-      </div>
-    );
+    return renderWithLayout(<OutfitMathPage onBack={() => setState('room-selection')} />);
   }
 
   // Рендер GiftGenius
   if (state === 'gift-genius') {
-    return (
-      <div className="App">
-        <GiftGeniusPage onBack={() => setState('room-selection')} />
-      </div>
-    );
+    return renderWithLayout(<GiftGeniusPage onBack={() => setState('room-selection')} />);
   }
 
   // Рендер AI-Медиатор
   if (state === 'ai-mediator') {
-    return (
-      <div className="App">
-        <AIMediatorPage onBack={() => setState('room-selection')} />
-      </div>
-    );
+    return renderWithLayout(<AIMediatorPage onBack={() => setState('room-selection')} />);
   }
 
   // Рендер Свайп по Вайбу
   if (state === 'vibe') {
-    return (
-      <div className="App">
-        <VibePage onBack={() => setState('room-selection')} />
-      </div>
-    );
+    return renderWithLayout(<VibePage onBack={() => setState('room-selection')} />);
   }
 
   // Рендер Кино-Рулетка
   if (state === 'movie-roulette') {
-    return (
-      <div className="App">
-        <MovieRoulettePage onBack={() => setState('room-selection')} />
-      </div>
-    );
+    return renderWithLayout(<MovieRoulettePage onBack={() => setState('room-selection')} />);
   }
 
   // Рендер Рецепт Вечера
   if (state === 'evening-recipe') {
-    return (
-      <div className="App">
-        <EveningRecipePage onBack={() => setState('room-selection')} />
-      </div>
-    );
+    return renderWithLayout(<EveningRecipePage onBack={() => setState('room-selection')} />);
   }
 
   // Рендер экрана авторизации
@@ -1016,15 +1028,36 @@ const App: React.FC = () => {
     return (
       <div className="App">
         <div className="auth-container">
-          <h1>🎬 KinoSwipe</h1>
-          <p>Выбери фильмы вместе с друзьями!</p>
-          <AuthForm
-            onLogin={handleQuickLogin}
-            onUserLogin={handleUserLogin}
-            onRegister={handleRegister}
-            loading={loading}
-            error={error}
-          />
+          <div className="auth-left">
+            <div className="auth-brand">
+              <span className="auth-brand-icon">🎬</span>
+              <h1>KinoSwipe</h1>
+              <p>Выбирайте фильмы вместе с друзьями — находите совпадения и смотрите вместе.</p>
+            </div>
+            <div className="auth-features">
+              <div className="auth-feature">
+                <div className="auth-feature-icon">🎲</div>
+                <span>Свайпайте фильмы как в Tinder</span>
+              </div>
+              <div className="auth-feature">
+                <div className="auth-feature-icon">🤝</div>
+                <span>Находите совпадения с друзьями</span>
+              </div>
+              <div className="auth-feature">
+                <div className="auth-feature-icon">🔗</div>
+                <span>Получайте ссылки на просмотр</span>
+              </div>
+            </div>
+          </div>
+          <div className="auth-right">
+            <AuthForm
+              onLogin={handleQuickLogin}
+              onUserLogin={handleUserLogin}
+              onRegister={handleRegister}
+              loading={loading}
+              error={error}
+            />
+          </div>
         </div>
       </div>
     );
@@ -1066,18 +1099,15 @@ const App: React.FC = () => {
     }
     genres = Array.isArray(genres) ? genres : [];
 
-    return (
-      <div className="App">
-        {leftPremieres.length > 0 && <PremiereSidebar premieres={premieresList} position="left" />}
-        {rightPremieres.length > 0 && <PremiereSidebar premieres={premieresList} position="right" />}
-        <div className={`room-selection-container ${leftPremieres.length > 0 ? 'with-left-sidebar' : ''} ${rightPremieres.length > 0 ? 'with-right-sidebar' : ''}`}>
+    return renderWithLayout(
+      <div className="room-selection-container">
           <div className="header">
             <div>
-              <h1>🎬 Привет, {user?.username}! 👋</h1>
-              <p className="welcome-message">Выбери фильмы вместе с друзьями! Создай комнату или присоединись к существующей.</p>
+              <h1>Привет, {user?.username}! 👋</h1>
+              <p className="welcome-message">Создай комнату или присоединись к существующей.</p>
               {(genres || []).length > 0 && (
                 <div className="user-preferences">
-                  <span className="preferences-label">Ваши предпочтения:</span>
+                  <span className="preferences-label">Ваши жанры:</span>
                   <div className="preferences-tags">
                     {(genres || []).slice(0, 5).map((genre: string) => (
                       <span key={genre} className="preference-tag">
@@ -1102,25 +1132,6 @@ const App: React.FC = () => {
                   </div>
                 </div>
               )}
-            </div>
-            <div className="header-actions">
-              <button onClick={() => setState('football')} className="secondary-button football-button">
-                ⚽ Футбол
-              </button>
-              {user && user.user_type === 'admin' && (
-                <button onClick={() => setState('admin')} className="secondary-button admin-button">
-                  🔐 Админ-панель
-                </button>
-              )}
-              {user && user.email && (
-                <button onClick={() => setShowProfile(true)} className="secondary-button">
-                  👤 Профиль
-                </button>
-              )}
-              <button onClick={() => setShowMovieLibrary(true)} className="secondary-button">
-                🎬 Библиотека фильмов
-              </button>
-              <button onClick={handleLogout} className="secondary-button">Выйти</button>
             </div>
           </div>
 
@@ -1308,23 +1319,6 @@ const App: React.FC = () => {
             </div>
           </footer>
         </div>
-
-        {/* Профиль пользователя - показывается на странице выбора комнаты */}
-        {showProfile && user && (
-          <Profile
-            user={user}
-            onClose={() => setShowProfile(false)}
-          />
-        )}
-
-        {/* Библиотека фильмов - показывается на странице выбора комнаты */}
-        {showMovieLibrary && (
-          <MovieLibrary
-            onClose={() => setShowMovieLibrary(false)}
-            isAdmin={user?.user_type === 'admin'}
-          />
-        )}
-      </div>
     );
   }
 
@@ -1348,9 +1342,8 @@ const App: React.FC = () => {
   if (state === 'room-waiting' && room) {
     const isHost = user?.id === room.host_id;
 
-    return (
-      <div className="App">
-        <div className="room-waiting-container">
+    return renderWithLayout(
+      <div className="room-waiting-container">
           <div className="waiting-content">
             <h1>🎬 Комната: {room.code}</h1>
             <p className="waiting-message">Ожидание участников...</p>
@@ -1523,7 +1516,6 @@ const App: React.FC = () => {
             {error && <p className="error-message">{error}</p>}
           </div>
         </div>
-      </div>
     );
   }
 
@@ -1535,8 +1527,8 @@ const App: React.FC = () => {
     ? Math.max(0, movies.length - currentMovieIndex) 
     : 0;
 
-  return (
-    <div className="App">
+  return renderWithLayout(
+    <>
       <div className="swipe-container">
         <div className="swipe-header">
           <div>
@@ -1718,60 +1710,7 @@ const App: React.FC = () => {
         </div>
       </footer>
 
-      {/* Профиль пользователя */}
-      {showProfile && user && (
-        <Profile
-          user={user}
-          onClose={() => setShowProfile(false)}
-        />
-      )}
-
-      {/* Библиотека фильмов */}
-      {showMovieLibrary && (
-        <MovieLibrary
-          onClose={() => setShowMovieLibrary(false)}
-          isAdmin={user?.user_type === 'admin'}
-        />
-      )}
-
-      {/* Страница рекомендаций */}
-      {showRecommendations && room && user && (
-        <RecommendationPage
-          userGenres={userGenres}
-          roomId={room.id}
-          userId={user.id}
-          onClose={() => {
-            setShowRecommendations(false);
-            handleLeaveRoom();
-          }}
-          onSelectMovie={(movie) => {
-            // При выборе фильма создаем матч или показываем ссылки
-            console.log('Selected movie:', movie);
-            setShowRecommendations(false);
-            // Можно добавить логику создания матча для выбранного фильма
-          }}
-        />
-      )}
-
-      {/* Страница со ссылками после матча - показывается автоматически при матче */}
-      {showMatchLinks && lastMatch && (
-        <MatchLinksPage
-          match={lastMatch}
-          onClose={() => {
-            setShowMatchLinks(false);
-            setLastMatch(null);
-            // Продолжаем свайпить после закрытия страницы со ссылками
-            if (movies && currentMovieIndex < movies.length - 1) {
-              setCurrentMovieIndex(currentMovieIndex + 1);
-            } else {
-              // Фильмы закончились, но матч был - показываем сообщение
-              setError('');
-            }
-          }}
-        />
-      )}
-
-    </div>
+    </>
   );
 };
 

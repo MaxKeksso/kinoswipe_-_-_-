@@ -24,27 +24,23 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
   const handleQuickLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username.trim()) {
-      onLogin(username.trim());
-    }
-  };
-
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (username.trim() && email.trim() && password.trim()) {
-      onRegister(username.trim(), email.trim(), password, phone.trim() || undefined);
-    }
+    if (username.trim()) onLogin(username.trim());
   };
 
   const handleUserLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.trim() && password.trim()) {
-      onUserLogin(email.trim(), password);
-    }
+    if (email.trim() && password.trim()) onUserLogin(email.trim(), password);
+  };
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (username.trim() && email.trim() && password.trim())
+      onRegister(username.trim(), email.trim(), password, phone.trim() || undefined);
   };
 
   return (
     <div className="auth-form-container">
+      {/* Mode tabs */}
       <div className="auth-tabs">
         <button
           className={`auth-tab ${mode === 'quick' ? 'active' : ''}`}
@@ -66,109 +62,142 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         </button>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
+      {/* Error */}
+      {error && <div className="auth-error">{error}</div>}
 
+      {/* Quick login */}
       {mode === 'quick' && (
         <form onSubmit={handleQuickLogin} className="auth-form">
-          <input
-            type="text"
-            placeholder="Твоё имя"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            disabled={loading}
-            className="input-field"
-            required
-          />
-          <button type="submit" disabled={loading || !username.trim()} className="primary-button">
-            {loading ? 'Загрузка...' : 'Войти'}
+          <div className="auth-field">
+            <label className="auth-field-label">Имя</label>
+            <input
+              type="text"
+              placeholder="Как тебя зовут?"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={loading}
+              required
+              autoFocus
+            />
+          </div>
+          <button
+            type="submit"
+            className="auth-submit"
+            disabled={loading || !username.trim()}
+          >
+            {loading ? 'Загрузка...' : 'Войти без регистрации →'}
           </button>
+          <p className="auth-quick-info">
+            Без пароля и email — просто введи имя. Прогресс сохранится в браузере.
+          </p>
         </form>
       )}
 
+      {/* Email login */}
       {mode === 'login' && (
         <form onSubmit={handleUserLogin} className="auth-form">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-            className="input-field"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Пароль"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-            className="input-field"
-            required
-          />
+          <div className="auth-field">
+            <label className="auth-field-label">Email</label>
+            <input
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+              autoFocus
+            />
+          </div>
+          <div className="auth-field">
+            <label className="auth-field-label">Пароль</label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
           <button
             type="submit"
+            className="auth-submit"
             disabled={loading || !email.trim() || !password.trim()}
-            className="primary-button"
           >
-            {loading ? 'Вход...' : 'Войти'}
+            {loading ? 'Вход...' : 'Войти →'}
           </button>
           <p className="auth-hint">
-            Нет аккаунта? <button type="button" onClick={() => setMode('register')} className="link-button">Зарегистрируйтесь</button>
+            Нет аккаунта?
+            <button type="button" onClick={() => setMode('register')} className="link-button">
+              Зарегистрируйтесь
+            </button>
           </p>
         </form>
       )}
 
+      {/* Register */}
       {mode === 'register' && (
         <form onSubmit={handleRegister} className="auth-form">
-          <input
-            type="text"
-            placeholder="Имя пользователя"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            disabled={loading}
-            className="input-field"
-            required
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-            className="input-field"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Пароль (минимум 6 символов)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-            className="input-field"
-            required
-            minLength={6}
-          />
-          <input
-            type="tel"
-            placeholder="Телефон (необязательно)"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            disabled={loading}
-            className="input-field"
-          />
+          <div className="auth-field">
+            <label className="auth-field-label">Имя пользователя</label>
+            <input
+              type="text"
+              placeholder="kinolover42"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={loading}
+              required
+              autoFocus
+            />
+          </div>
+          <div className="auth-field">
+            <label className="auth-field-label">Email</label>
+            <input
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
+          <div className="auth-field">
+            <label className="auth-field-label">Пароль</label>
+            <input
+              type="password"
+              placeholder="Минимум 6 символов"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+              minLength={6}
+            />
+          </div>
+          <div className="auth-field">
+            <label className="auth-field-label">Телефон (необязательно)</label>
+            <input
+              type="tel"
+              placeholder="+7 (999) 123-45-67"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              disabled={loading}
+            />
+          </div>
           <button
             type="submit"
+            className="auth-submit"
             disabled={loading || !username.trim() || !email.trim() || !password.trim()}
-            className="primary-button"
           >
-            {loading ? 'Регистрация...' : 'Зарегистрироваться'}
+            {loading ? 'Регистрация...' : 'Создать аккаунт →'}
           </button>
           <p className="auth-hint">
-            Уже есть аккаунт? <button type="button" onClick={() => setMode('login')} className="link-button">Войдите</button>
+            Уже есть аккаунт?
+            <button type="button" onClick={() => setMode('login')} className="link-button">
+              Войдите
+            </button>
           </p>
         </form>
       )}
-
     </div>
   );
 };
