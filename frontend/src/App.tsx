@@ -11,6 +11,7 @@ import { MovieLibrary } from './components/MovieLibrary';
 import { FootballPage } from './components/FootballPage';
 import SplitSubscribePage from './components/SplitSubscribePage';
 import OutfitMathPage from './components/OutfitMathPage';
+import GiftGeniusPage from './components/GiftGeniusPage';
 import { apiService, authStorage, setApiErrorHandler, User, Room, Movie, Match, Premiere } from './api/api';
 import { getMovieDisplayTitle } from './utils/movieRussian';
 import { useWebSocket } from './hooks/useWebSocket';
@@ -20,7 +21,7 @@ const TIMEWEB_WIDGET_SRC =
   process.env.REACT_APP_TIMEWEB_WIDGET_SRC ||
   'https://timeweb.cloud/api/v1/cloud-ai/agents/993cc710-5b8f-457d-b57d-94f9d3eeaaf2/embed.js?collapsed=false';
 
-type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football' | 'split-subscribe' | 'outfit-math';
+type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football' | 'split-subscribe' | 'outfit-math' | 'gift-genius';
 
 const App: React.FC = () => {
   
@@ -961,6 +962,15 @@ const App: React.FC = () => {
     );
   }
 
+  // Рендер GiftGenius
+  if (state === 'gift-genius') {
+    return (
+      <div className="App">
+        <GiftGeniusPage onBack={() => setState('room-selection')} />
+      </div>
+    );
+  }
+
   // Рендер экрана авторизации
   if (state === 'auth') {
     return (
@@ -1057,12 +1067,6 @@ const App: React.FC = () => {
               <button onClick={() => setState('football')} className="secondary-button football-button">
                 ⚽ Футбол
               </button>
-              <button onClick={() => setState('split-subscribe')} className="secondary-button">
-                💳 Split & Subscribe
-              </button>
-              <button onClick={() => setState('outfit-math')} className="secondary-button">
-                👗 OutfitMath
-              </button>
               {user && user.user_type === 'admin' && (
                 <button onClick={() => setState('admin')} className="secondary-button admin-button">
                   🔐 Админ-панель
@@ -1106,6 +1110,37 @@ const App: React.FC = () => {
                 <button onClick={() => handleJoinRoom()} disabled={loading || !roomCode.trim()} className="primary-button">
                   Присоединиться
                 </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Хаб дополнительных приложений */}
+          <div className="apps-hub-section">
+            <h2 className="apps-hub-title">🚀 Другие приложения</h2>
+            <div className="apps-hub-grid">
+              <div className="apps-hub-card" onClick={() => setState('split-subscribe')}>
+                <div className="apps-hub-card-icon" style={{ background: 'linear-gradient(135deg, #6c63ff, #a855f7)' }}>💳</div>
+                <div className="apps-hub-card-body">
+                  <strong>Split & Subscribe</strong>
+                  <p>Совместные подписки и расчёт долгов</p>
+                </div>
+                <span className="apps-hub-arrow">→</span>
+              </div>
+              <div className="apps-hub-card" onClick={() => setState('outfit-math')}>
+                <div className="apps-hub-card-icon" style={{ background: 'linear-gradient(135deg, #f093fb, #f5576c)' }}>👗</div>
+                <div className="apps-hub-card-body">
+                  <strong>OutfitMath</strong>
+                  <p>Умный гардероб и подбор образа по погоде</p>
+                </div>
+                <span className="apps-hub-arrow">→</span>
+              </div>
+              <div className="apps-hub-card" onClick={() => setState('gift-genius')}>
+                <div className="apps-hub-card-icon" style={{ background: 'linear-gradient(135deg, #f7971e, #ffd200)' }}>🎁</div>
+                <div className="apps-hub-card-body">
+                  <strong>GiftGenius</strong>
+                  <p>AI-подбор подарков по интересам друзей</p>
+                </div>
+                <span className="apps-hub-arrow">→</span>
               </div>
             </div>
           </div>
