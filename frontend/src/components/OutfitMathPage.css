@@ -1,0 +1,404 @@
+.outfit-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Уведомление */
+.outfit-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #f093fb, #f5576c);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(240, 147, 251, 0.5);
+  animation: slideDown 0.3s ease;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Шапка */
+.outfit-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  flex-wrap: wrap;
+}
+.outfit-back-btn {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.outfit-back-btn:hover { background: rgba(255,255,255,0.2); }
+.outfit-header-title { flex: 1; }
+.outfit-header-title h1 { margin: 0; font-size: 22px; font-weight: 700; }
+.outfit-header-title p { margin: 2px 0 0; font-size: 13px; opacity: 0.6; }
+
+.outfit-weather-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 8px 16px;
+}
+.outfit-weather-icon { font-size: 22px; }
+.outfit-weather-temp { display: block; font-size: 16px; font-weight: 700; }
+.outfit-weather-desc { font-size: 12px; opacity: 0.7; }
+
+/* Табы */
+.outfit-tabs {
+  display: flex;
+  padding: 14px 20px 0;
+  gap: 8px;
+  overflow-x: auto;
+}
+.outfit-tab {
+  padding: 9px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.outfit-tab.active {
+  background: linear-gradient(90deg, #f093fb, #f5576c);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Контент */
+.outfit-content {
+  padding: 20px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Карточка погоды */
+.outfit-weather-card {
+  background: rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.outfit-weather-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.outfit-weather-big { font-size: 48px; }
+.outfit-weather-main h2 { margin: 0 0 4px; font-size: 20px; }
+.outfit-weather-main p { margin: 0; font-size: 14px; opacity: 0.7; }
+.outfit-weather-advice {
+  font-size: 14px;
+  color: #f093fb;
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Генерация образа */
+.outfit-generate-block {
+  background: rgba(255,255,255,0.05);
+  border-radius: 20px;
+  padding: 40px 24px;
+  text-align: center;
+  border: 1px dashed rgba(255,255,255,0.15);
+  margin-bottom: 20px;
+}
+.outfit-generate-icon { font-size: 60px; margin-bottom: 16px; }
+.outfit-generate-block h2 { margin: 0 0 10px; font-size: 22px; }
+.outfit-generate-block p { margin: 0 0 24px; opacity: 0.6; font-size: 15px; }
+
+/* Результат образа */
+.outfit-result { margin-bottom: 20px; }
+.outfit-result h2 { font-size: 20px; margin-bottom: 14px; }
+.outfit-items-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.outfit-item-card {
+  background: rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.outfit-item-emoji { font-size: 28px; }
+.outfit-item-info { flex: 1; }
+.outfit-item-info strong { display: block; font-size: 15px; }
+.outfit-item-slot { font-size: 12px; opacity: 0.5; }
+.outfit-item-cpw { font-size: 13px; font-weight: 600; }
+
+.outfit-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Кнопки */
+.outfit-btn-primary {
+  background: linear-gradient(90deg, #f093fb, #f5576c);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+.outfit-btn-primary:hover { opacity: 0.88; }
+.outfit-btn-primary.large { padding: 14px 32px; font-size: 16px; }
+.outfit-btn-ghost {
+  background: transparent;
+  color: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 10px 22px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.outfit-btn-ghost:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+/* Свайп-секция */
+.outfit-swipe-section { margin-top: 24px; }
+.outfit-swipe-section h2 { font-size: 18px; margin-bottom: 6px; }
+.outfit-swipe-hint { font-size: 13px; opacity: 0.5; margin: 0 0 16px; }
+.outfit-swipe-card {
+  background: rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 28px 20px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.outfit-swipe-emoji { font-size: 56px; margin-bottom: 12px; }
+.outfit-swipe-card h3 { margin: 0 0 6px; font-size: 20px; }
+.outfit-swipe-meta { font-size: 13px; opacity: 0.6; margin: 0 0 12px; }
+.outfit-swipe-cpw { font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+.outfit-swipe-btns {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.outfit-swipe-no {
+  background: rgba(255, 71, 87, 0.15);
+  color: #ff4757;
+  border: 2px solid rgba(255, 71, 87, 0.3);
+  padding: 12px 28px;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.outfit-swipe-no:hover { background: rgba(255, 71, 87, 0.3); }
+.outfit-swipe-yes {
+  background: rgba(29, 185, 84, 0.15);
+  color: #1db954;
+  border: 2px solid rgba(29, 185, 84, 0.3);
+  padding: 12px 28px;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.outfit-swipe-yes:hover { background: rgba(29, 185, 84, 0.3); }
+.outfit-swipe-counter { font-size: 12px; opacity: 0.4; margin: 0; }
+.outfit-swipe-done {
+  background: rgba(29, 185, 84, 0.15);
+  border: 1px solid rgba(29, 185, 84, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  font-size: 15px;
+  color: #1db954;
+  margin-top: 20px;
+}
+
+/* Гардероб */
+.outfit-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.outfit-section-header h2 { margin: 0; font-size: 18px; }
+.outfit-add-btn {
+  background: rgba(240, 147, 251, 0.2);
+  color: #f093fb;
+  border: 1px solid rgba(240, 147, 251, 0.3);
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.outfit-add-btn:hover { background: rgba(240, 147, 251, 0.35); color: #fff; }
+
+.outfit-add-form {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.outfit-add-form h3 { margin: 0 0 14px; font-size: 16px; }
+.outfit-input {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+.outfit-input::placeholder { color: rgba(255,255,255,0.4); }
+.outfit-select {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+.outfit-select option { background: #16213e; }
+.outfit-form-actions { display: flex; gap: 8px; margin-top: 4px; }
+
+.outfit-wardrobe-grid { display: flex; flex-direction: column; gap: 8px; }
+.outfit-wardrobe-card {
+  background: rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.outfit-wardrobe-emoji { font-size: 26px; }
+.outfit-wardrobe-info { flex: 1; }
+.outfit-wardrobe-info strong { display: block; font-size: 14px; margin-bottom: 2px; }
+.outfit-wardrobe-cat { font-size: 12px; opacity: 0.5; }
+.outfit-wardrobe-stats { display: flex; gap: 8px; align-items: center; }
+.outfit-wears-badge {
+  background: rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 12px;
+}
+.outfit-cpw-badge {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Статистика */
+.outfit-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.outfit-stat-card {
+  background: rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 16px 12px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.outfit-stat-icon { font-size: 22px; }
+.outfit-stat-value { font-size: 18px; font-weight: 700; }
+.outfit-stat-label { font-size: 11px; opacity: 0.55; }
+
+.outfit-insight-card {
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.outfit-insight-card.green {
+  background: rgba(29, 185, 84, 0.1);
+  border: 1px solid rgba(29, 185, 84, 0.2);
+}
+.outfit-insight-card.red {
+  background: rgba(255, 71, 87, 0.1);
+  border: 1px solid rgba(255, 71, 87, 0.2);
+}
+.outfit-insight-icon { font-size: 28px; }
+.outfit-insight-card h3 { margin: 0 0 6px; font-size: 15px; }
+.outfit-insight-card p { margin: 0 0 4px; font-size: 13px; opacity: 0.8; }
+.outfit-advice { color: #f093fb !important; font-style: italic; }
+
+.outfit-cpw-section { margin-bottom: 20px; }
+.outfit-cpw-section h3 { font-size: 16px; margin-bottom: 12px; }
+.outfit-cpw-list { display: flex; flex-direction: column; gap: 8px; }
+.outfit-cpw-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.outfit-cpw-emoji { font-size: 18px; min-width: 26px; }
+.outfit-cpw-name { min-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.outfit-cpw-bar-wrap {
+  flex: 1;
+  background: rgba(255,255,255,0.07);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+}
+.outfit-cpw-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+.outfit-cpw-value { min-width: 55px; text-align: right; font-weight: 600; }
+
+.outfit-tip-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 18px;
+}
+.outfit-tip-card h3 { margin: 0 0 8px; font-size: 15px; }
+.outfit-tip-card p { margin: 0; font-size: 13px; opacity: 0.7; line-height: 1.6; }
+
+@media (max-width: 500px) {
+  .outfit-stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .outfit-stat-value { font-size: 15px; }
+  .outfit-content { padding: 14px; }
+  .outfit-cpw-name { min-width: 80px; }
+}

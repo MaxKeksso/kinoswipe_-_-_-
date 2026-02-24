@@ -1,0 +1,468 @@
+.split-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Уведомление */
+.split-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #6c63ff, #a855f7);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(108, 99, 255, 0.5);
+  animation: slideDown 0.3s ease;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Шапка */
+.split-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+}
+.split-back-btn {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.split-back-btn:hover { background: rgba(255,255,255,0.2); }
+.split-header-title h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+.split-header-title p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+/* Табы */
+.split-tabs {
+  display: flex;
+  padding: 16px 24px 0;
+  gap: 8px;
+}
+.split-tab {
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.split-tab.active {
+  background: linear-gradient(90deg, #6c63ff, #a855f7);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Контент */
+.split-content {
+  padding: 20px 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Статистика */
+.split-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.split-stat-card {
+  background: rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.split-stat-card.green { border-color: rgba(29, 185, 84, 0.3); }
+.split-stat-card.blue { border-color: rgba(108, 99, 255, 0.3); }
+.split-stat-value {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.split-stat-label {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* Секции */
+.split-section {
+  margin-bottom: 28px;
+}
+.split-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.split-section-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.split-add-btn {
+  background: rgba(108, 99, 255, 0.3);
+  color: #a89fff;
+  border: 1px solid rgba(108, 99, 255, 0.4);
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.split-add-btn:hover {
+  background: rgba(108, 99, 255, 0.5);
+  color: #fff;
+}
+
+/* Участники */
+.split-members-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.split-member-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 14px;
+}
+.split-member-avatar { font-size: 18px; }
+.split-member-name { font-weight: 500; }
+
+/* Форма добавления */
+.split-add-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.split-add-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.split-add-card h3 { margin: 0 0 16px; font-size: 16px; }
+.split-input {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+}
+.split-input::placeholder { color: rgba(255,255,255,0.4); }
+.split-select {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+}
+.split-select option { background: #302b63; }
+.split-label {
+  font-size: 13px;
+  opacity: 0.7;
+  margin: 0 0 8px;
+}
+
+/* Сетка сервисов */
+.split-services-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+@media (min-width: 480px) {
+  .split-services-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.split-service-btn {
+  background: rgba(255,255,255,0.06);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  color: #fff;
+  padding: 8px 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+  text-align: center;
+}
+.split-service-btn:hover { background: rgba(255,255,255,0.12); }
+.split-service-btn.selected { background: rgba(108, 99, 255, 0.2); }
+
+/* Чекбоксы */
+.split-checkbox-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.split-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.split-checkbox-label input { width: 16px; height: 16px; cursor: pointer; }
+
+.split-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Кнопки */
+.split-btn-primary {
+  background: linear-gradient(90deg, #6c63ff, #a855f7);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+.split-btn-primary:hover { opacity: 0.9; }
+.split-btn-primary.large { padding: 14px 28px; font-size: 16px; }
+.split-btn-ghost {
+  background: transparent;
+  color: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.split-btn-ghost:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+/* Карточки подписок */
+.split-subs-list { display: flex; flex-direction: column; gap: 10px; }
+.split-sub-card {
+  background: rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 14px 16px;
+  border-left: 4px solid #6c63ff;
+}
+.split-sub-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.split-sub-icon { font-size: 24px; }
+.split-sub-info { flex: 1; }
+.split-sub-info strong { display: block; font-size: 15px; margin-bottom: 2px; }
+.split-sub-meta { font-size: 12px; opacity: 0.6; }
+.split-sub-cost { text-align: right; }
+.split-sub-total { display: block; font-size: 18px; font-weight: 700; }
+.split-sub-payer { font-size: 11px; opacity: 0.6; }
+.split-remove-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.3);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  transition: color 0.2s;
+}
+.split-remove-btn:hover { color: #ff4757; }
+.split-sub-members { display: flex; flex-wrap: wrap; gap: 6px; }
+.split-mini-chip {
+  background: rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
+/* Долги */
+.split-all-clear {
+  background: rgba(29, 185, 84, 0.15);
+  border: 1px solid rgba(29, 185, 84, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  font-size: 16px;
+  color: #1db954;
+}
+.split-debts-list { display: flex; flex-direction: column; gap: 10px; }
+.split-debt-card {
+  background: rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.split-debt-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  font-size: 14px;
+}
+.split-debt-from { font-weight: 600; }
+.split-debt-arrow { color: rgba(255,255,255,0.4); font-size: 18px; }
+.split-debt-to { font-weight: 600; }
+.split-debt-amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff6b6b;
+  min-width: 70px;
+  text-align: right;
+}
+.split-notify-btn {
+  background: rgba(108, 99, 255, 0.2);
+  color: #a89fff;
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.split-notify-btn:hover { background: rgba(108, 99, 255, 0.4); color: #fff; }
+
+/* Маркет */
+.split-market-header {
+  margin-bottom: 20px;
+}
+.split-market-header h2 { margin: 0 0 6px; font-size: 22px; }
+.split-market-header p { margin: 0; opacity: 0.6; font-size: 14px; }
+
+.split-listings { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+.split-listing-card {
+  background: rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: transform 0.2s;
+}
+.split-listing-card:hover { transform: translateY(-2px); }
+.split-listing-card.full { opacity: 0.5; }
+.split-listing-top {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.split-listing-icon { font-size: 32px; }
+.split-listing-info { flex: 1; }
+.split-listing-info strong { font-size: 16px; display: block; margin-bottom: 4px; }
+.split-listing-desc { font-size: 13px; opacity: 0.7; margin: 0 0 4px; }
+.split-listing-host { font-size: 12px; opacity: 0.5; margin: 0; }
+.split-listing-price { text-align: right; }
+.split-listing-amount { display: block; font-size: 22px; font-weight: 700; }
+.split-listing-period { font-size: 12px; opacity: 0.5; }
+.split-listing-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.split-slots { display: flex; flex-direction: column; gap: 6px; }
+.split-slots-bar { display: flex; gap: 4px; }
+.split-slot {
+  width: 20px;
+  height: 8px;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+.split-slot.filled { background: linear-gradient(90deg, #6c63ff, #a855f7); }
+.split-slot.empty { background: rgba(255,255,255,0.15); }
+.split-slots-text { font-size: 12px; opacity: 0.6; }
+.split-full-badge {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.4);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+.split-requested-badge {
+  background: rgba(29, 185, 84, 0.2);
+  color: #1db954;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.split-join-btn {
+  background: linear-gradient(90deg, #6c63ff, #a855f7);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+.split-join-btn:hover { opacity: 0.85; }
+
+.split-create-listing {
+  background: rgba(108, 99, 255, 0.1);
+  border: 1px dashed rgba(108, 99, 255, 0.4);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+}
+.split-create-listing h3 { margin: 0 0 8px; font-size: 18px; }
+.split-create-listing p { margin: 0 0 16px; opacity: 0.6; font-size: 14px; }
+
+@media (max-width: 600px) {
+  .split-stats-row { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .split-stat-value { font-size: 18px; }
+  .split-header-title h1 { font-size: 20px; }
+  .split-content { padding: 16px; }
+}

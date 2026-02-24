@@ -9,6 +9,8 @@ import { RecommendationPage } from './components/RecommendationPage';
 import { Profile } from './components/Profile';
 import { MovieLibrary } from './components/MovieLibrary';
 import { FootballPage } from './components/FootballPage';
+import SplitSubscribePage from './components/SplitSubscribePage';
+import OutfitMathPage from './components/OutfitMathPage';
 import { apiService, authStorage, setApiErrorHandler, User, Room, Movie, Match, Premiere } from './api/api';
 import { getMovieDisplayTitle } from './utils/movieRussian';
 import { useWebSocket } from './hooks/useWebSocket';
@@ -18,7 +20,7 @@ const TIMEWEB_WIDGET_SRC =
   process.env.REACT_APP_TIMEWEB_WIDGET_SRC ||
   'https://timeweb.cloud/api/v1/cloud-ai/agents/993cc710-5b8f-457d-b57d-94f9d3eeaaf2/embed.js?collapsed=false';
 
-type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football';
+type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football' | 'split-subscribe' | 'outfit-math';
 
 const App: React.FC = () => {
   
@@ -941,6 +943,24 @@ const App: React.FC = () => {
     );
   }
 
+  // Рендер Split & Subscribe
+  if (state === 'split-subscribe') {
+    return (
+      <div className="App">
+        <SplitSubscribePage onBack={() => setState('room-selection')} />
+      </div>
+    );
+  }
+
+  // Рендер OutfitMath
+  if (state === 'outfit-math') {
+    return (
+      <div className="App">
+        <OutfitMathPage onBack={() => setState('room-selection')} />
+      </div>
+    );
+  }
+
   // Рендер экрана авторизации
   if (state === 'auth') {
     return (
@@ -1036,6 +1056,12 @@ const App: React.FC = () => {
             <div className="header-actions">
               <button onClick={() => setState('football')} className="secondary-button football-button">
                 ⚽ Футбол
+              </button>
+              <button onClick={() => setState('split-subscribe')} className="secondary-button">
+                💳 Split & Subscribe
+              </button>
+              <button onClick={() => setState('outfit-math')} className="secondary-button">
+                👗 OutfitMath
               </button>
               {user && user.user_type === 'admin' && (
                 <button onClick={() => setState('admin')} className="secondary-button admin-button">
