@@ -12,6 +12,10 @@ import { FootballPage } from './components/FootballPage';
 import SplitSubscribePage from './components/SplitSubscribePage';
 import OutfitMathPage from './components/OutfitMathPage';
 import GiftGeniusPage from './components/GiftGeniusPage';
+import AIMediatorPage from './components/AIMediatorPage';
+import VibePage from './components/VibePage';
+import MovieRoulettePage from './components/MovieRoulettePage';
+import EveningRecipePage from './components/EveningRecipePage';
 import { apiService, authStorage, setApiErrorHandler, User, Room, Movie, Match, Premiere } from './api/api';
 import { getMovieDisplayTitle } from './utils/movieRussian';
 import { useWebSocket } from './hooks/useWebSocket';
@@ -21,7 +25,7 @@ const TIMEWEB_WIDGET_SRC =
   process.env.REACT_APP_TIMEWEB_WIDGET_SRC ||
   'https://timeweb.cloud/api/v1/cloud-ai/agents/993cc710-5b8f-457d-b57d-94f9d3eeaaf2/embed.js?collapsed=false';
 
-type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football' | 'split-subscribe' | 'outfit-math' | 'gift-genius';
+type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football' | 'split-subscribe' | 'outfit-math' | 'gift-genius' | 'ai-mediator' | 'vibe' | 'movie-roulette' | 'evening-recipe';
 
 const App: React.FC = () => {
   
@@ -971,6 +975,42 @@ const App: React.FC = () => {
     );
   }
 
+  // Рендер AI-Медиатор
+  if (state === 'ai-mediator') {
+    return (
+      <div className="App">
+        <AIMediatorPage onBack={() => setState('room-selection')} />
+      </div>
+    );
+  }
+
+  // Рендер Свайп по Вайбу
+  if (state === 'vibe') {
+    return (
+      <div className="App">
+        <VibePage onBack={() => setState('room-selection')} />
+      </div>
+    );
+  }
+
+  // Рендер Кино-Рулетка
+  if (state === 'movie-roulette') {
+    return (
+      <div className="App">
+        <MovieRoulettePage onBack={() => setState('room-selection')} />
+      </div>
+    );
+  }
+
+  // Рендер Рецепт Вечера
+  if (state === 'evening-recipe') {
+    return (
+      <div className="App">
+        <EveningRecipePage onBack={() => setState('room-selection')} />
+      </div>
+    );
+  }
+
   // Рендер экрана авторизации
   if (state === 'auth') {
     return (
@@ -1139,6 +1179,38 @@ const App: React.FC = () => {
                 <div className="apps-hub-card-body">
                   <strong>GiftGenius</strong>
                   <p>AI-подбор подарков по интересам друзей</p>
+                </div>
+                <span className="apps-hub-arrow">→</span>
+              </div>
+              <div className="apps-hub-card" onClick={() => setState('ai-mediator')}>
+                <div className="apps-hub-card-icon" style={{ background: 'linear-gradient(135deg, #0a0015, #a855f7)' }}>🤝</div>
+                <div className="apps-hub-card-body">
+                  <strong>AI-Медиатор</strong>
+                  <p>Найдём фильм-компромисс для двоих</p>
+                </div>
+                <span className="apps-hub-arrow">→</span>
+              </div>
+              <div className="apps-hub-card" onClick={() => setState('vibe')}>
+                <div className="apps-hub-card-icon" style={{ background: 'linear-gradient(135deg, #1a001e, #6d1a9c)' }}>✨</div>
+                <div className="apps-hub-card-body">
+                  <strong>Свайп по Вайбу</strong>
+                  <p>Выбирай настроение — получай фильм</p>
+                </div>
+                <span className="apps-hub-arrow">→</span>
+              </div>
+              <div className="apps-hub-card" onClick={() => setState('movie-roulette')}>
+                <div className="apps-hub-card-icon" style={{ background: 'linear-gradient(135deg, #7d3c00, #e67e22)' }}>🎰</div>
+                <div className="apps-hub-card-body">
+                  <strong>Кино-Рулетка</strong>
+                  <p>Игра с вето и суперлайками для компании</p>
+                </div>
+                <span className="apps-hub-arrow">→</span>
+              </div>
+              <div className="apps-hub-card" onClick={() => setState('evening-recipe')}>
+                <div className="apps-hub-card-icon" style={{ background: 'linear-gradient(135deg, #0d0d1a, #a855f7)' }}>🌙</div>
+                <div className="apps-hub-card-body">
+                  <strong>Рецепт Вечера</strong>
+                  <p>Плейлист, коктейль и доставка к фильму</p>
                 </div>
                 <span className="apps-hub-arrow">→</span>
               </div>
