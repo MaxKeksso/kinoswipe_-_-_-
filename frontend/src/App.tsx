@@ -14,6 +14,10 @@ import { getMovieDisplayTitle } from './utils/movieRussian';
 import { useWebSocket } from './hooks/useWebSocket';
 import './App.css';
 
+const TIMEWEB_WIDGET_SRC =
+  process.env.REACT_APP_TIMEWEB_WIDGET_SRC ||
+  'https://timeweb.cloud/api/v1/cloud-ai/agents/993cc710-5b8f-457d-b57d-94f9d3eeaaf2/embed.js?collapsed=false';
+
 type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football';
 
 const App: React.FC = () => {
@@ -52,7 +56,7 @@ const App: React.FC = () => {
     if (document.getElementById(scriptId)) return;
     const script = document.createElement('script');
     script.id = scriptId;
-    script.src = 'https://timeweb.cloud/api/v1/cloud-ai/agents/993cc710-5b8f-457d-b57d-94f9d3eeaaf2/embed.js?collapsed=false';
+    script.src = TIMEWEB_WIDGET_SRC;
     script.async = true;
     script.crossOrigin = 'anonymous';
     document.body.appendChild(script);
