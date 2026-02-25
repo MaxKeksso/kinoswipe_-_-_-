@@ -117,6 +117,18 @@ func (h *FootballHandler) GetStandings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetCLBracket возвращает сетку плей-офф Лиги Чемпионов
+func (h *FootballHandler) GetCLBracket(w http.ResponseWriter, r *http.Request) {
+	bracket, err := h.footballService.GetCLBracket()
+	if err != nil {
+		log.Printf("Error fetching CL bracket: %v", err)
+		http.Error(w, "Failed to fetch CL bracket", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(bracket)
+}
+
 // RefreshMatches принудительно обновляет кеш матчей
 func (h *FootballHandler) RefreshMatches(w http.ResponseWriter, r *http.Request) {
 	err := h.footballService.RefreshCache()

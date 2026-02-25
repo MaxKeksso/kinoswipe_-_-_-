@@ -58,6 +58,14 @@ type FootballService struct {
 	standingsTTL        time.Duration
 }
 
+// CLBracket описывает сетку плей-офф Лиги чемпионов
+type CLBracket struct {
+	RoundOf16     []FootballMatch `json:"roundOf16"`
+	QuarterFinals []FootballMatch `json:"quarterFinals"`
+	SemiFinals    []FootballMatch `json:"semiFinals"`
+	Final         []FootballMatch `json:"final"`
+}
+
 // Football-Data.org API структуры
 type FootballDataResponse struct {
 	Matches []FootballDataMatch `json:"matches"`
@@ -67,6 +75,7 @@ type FootballDataMatch struct {
 	ID          int    `json:"id"`
 	UtcDate     string `json:"utcDate"`
 	Status      string `json:"status"`
+	Stage       string `json:"stage"`
 	HomeTeam    Team   `json:"homeTeam"`
 	AwayTeam    Team   `json:"awayTeam"`
 	Score       Score  `json:"score"`
@@ -402,6 +411,122 @@ func (s *FootballService) fetchChampionsLeagueMatches() ([]FootballMatch, error)
 	log.Printf("Filtered to %d upcoming matches (within 30 days)", len(matches))
 	
 	return matches, nil
+}
+
+// GetCLBracket возвращает сетку плей-офф Лиги чемпионов (динамически из API, при ошибке — статическая)
+func (s *FootballService) GetCLBracket() (*CLBracket, error) {
+	bracket, err := s.fetchCLBracket()
+	if err != nil {
+		log.Printf("CL bracket API error, using static: %v", err)
+		return s.getCLStaticBracket(), nil
+	}
+	return bracket, nil
+}
+
+// fetchCLBracket получает все матчи ЛЧ и группирует их по стадиям плей-офф
+func (s *FootballService) fetchCLBracket() (*CLBracket, error) {
+	url := fmt.Sprintf("%s/competitions/CL/matches", s.apiBaseURL)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	if s.apiKey != "" {
+		req.Header.Set("X-Auth-Token", s.apiKey)
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("football-data.org CL bracket %d: %s", resp.StatusCode, string(body))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var apiResp FootballDataResponse
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return nil, err
+	}
+
+	// Московское время (UTC+3)
+	moscowLocation, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		moscowLocation = time.UTC
+	}
+
+	bracket := &CLBracket{
+		RoundOf16:     make([]FootballMatch, 0),
+		QuarterFinals: make([]FootballMatch, 0),
+		SemiFinals:    make([]FootballMatch, 0),
+		Final:         make([]FootballMatch, 0),
+	}
+
+	for _, m := range apiResp.Matches {
+		switch m.Stage {
+		case "ROUND_OF_16", "QUARTER_FINALS", "SEMI_FINALS", "FINAL":
+			// интересуют только стадии плей-офф
+		default:
+			continue
+		}
+
+		matchDateUTC, err := time.Parse(time.RFC3339, m.UtcDate)
+		if err != nil {
+			continue
+		}
+		matchDate := matchDateUTC.In(moscowLocation)
+
+		status := "upcoming"
+		if m.Status == "LIVE" || m.Status == "IN_PLAY" {
+			status = "live"
+		} else if m.Status == "FINISHED" {
+			status = "finished"
+		}
+
+		match := FootballMatch{
+			ID:         fmt.Sprintf("%d", m.ID),
+			Date:       matchDate.Format("2006-01-02"),
+			Time:       matchDate.Format("15:04"),
+			HomeTeam:   m.HomeTeam.Name,
+			AwayTeam:   m.AwayTeam.Name,
+			Tournament: m.Competition.Name,
+			Status:     status,
+			MatchDate:  matchDate,
+		}
+		if m.Score.FullTime.HomeTeam != nil {
+			match.HomeScore = m.Score.FullTime.HomeTeam
+		}
+		if m.Score.FullTime.AwayTeam != nil {
+			match.AwayScore = m.Score.FullTime.AwayTeam
+		}
+
+		switch m.Stage {
+		case "ROUND_OF_16":
+			bracket.RoundOf16 = append(bracket.RoundOf16, match)
+		case "QUARTER_FINALS":
+			bracket.QuarterFinals = append(bracket.QuarterFinals, match)
+		case "SEMI_FINALS":
+			bracket.SemiFinals = append(bracket.SemiFinals, match)
+		case "FINAL":
+			bracket.Final = append(bracket.Final, match)
+		}
+	}
+
+	// сортируем внутри каждой стадии по дате
+	sort.Slice(bracket.RoundOf16, func(i, j int) bool { return bracket.RoundOf16[i].MatchDate.Before(bracket.RoundOf16[j].MatchDate) })
+	sort.Slice(bracket.QuarterFinals, func(i, j int) bool { return bracket.QuarterFinals[i].MatchDate.Before(bracket.QuarterFinals[j].MatchDate) })
+	sort.Slice(bracket.SemiFinals, func(i, j int) bool { return bracket.SemiFinals[i].MatchDate.Before(bracket.SemiFinals[j].MatchDate) })
+	sort.Slice(bracket.Final, func(i, j int) bool { return bracket.Final[i].MatchDate.Before(bracket.Final[j].MatchDate) })
+
+	return bracket, nil
 }
 
 // RefreshCache принудительно обновляет кеш
@@ -797,6 +922,57 @@ func (s *FootballService) getCLStaticStandings() []FootballStanding {
 		}
 	}
 	return result
+}
+
+// getCLStaticBracket — статическая сетка плей-офф ЛЧ на случай недоступности API
+func (s *FootballService) getCLStaticBracket() *CLBracket {
+	moscowLocation, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		moscowLocation = time.UTC
+	}
+	now := time.Now().In(moscowLocation)
+
+	makeMatch := func(id, home, away, stage string, daysFromNow int, hour, min int) FootballMatch {
+		dt := time.Date(now.Year(), now.Month(), now.Day()+daysFromNow, hour, min, 0, 0, moscowLocation)
+		return FootballMatch{
+			ID:         id,
+			Date:       dt.Format("2006-01-02"),
+			Time:       dt.Format("15:04"),
+			HomeTeam:   home,
+			AwayTeam:   away,
+			Tournament: "Лига Чемпионов",
+			Status:     "upcoming",
+			MatchDate:  dt,
+		}
+	}
+
+	bracket := &CLBracket{
+		RoundOf16: []FootballMatch{
+			makeMatch("cl-r16-1", "Ливерпуль", "Бавария", "ROUND_OF_16", 2, 22, 0),
+			makeMatch("cl-r16-2", "Реал Мадрид", "ПСЖ", "ROUND_OF_16", 3, 22, 0),
+			makeMatch("cl-r16-3", "Барселона", "Манчестер Сити", "ROUND_OF_16", 4, 22, 0),
+			makeMatch("cl-r16-4", "Интер", "Арсенал", "ROUND_OF_16", 5, 22, 0),
+			makeMatch("cl-r16-5", "Атлетико", "Челси", "ROUND_OF_16", 6, 22, 0),
+			makeMatch("cl-r16-6", "Ювентус", "Боруссия Дортмунд", "ROUND_OF_16", 7, 22, 0),
+			makeMatch("cl-r16-7", "Байер", "Милан", "ROUND_OF_16", 8, 22, 0),
+			makeMatch("cl-r16-8", "Порту", "Наполи", "ROUND_OF_16", 9, 22, 0),
+		},
+		QuarterFinals: []FootballMatch{
+			makeMatch("cl-qf-1", "Победитель пары 1", "Победитель пары 2", "QUARTER_FINALS", 14, 22, 0),
+			makeMatch("cl-qf-2", "Победитель пары 3", "Победитель пары 4", "QUARTER_FINALS", 15, 22, 0),
+			makeMatch("cl-qf-3", "Победитель пары 5", "Победитель пары 6", "QUARTER_FINALS", 16, 22, 0),
+			makeMatch("cl-qf-4", "Победитель пары 7", "Победитель пары 8", "QUARTER_FINALS", 17, 22, 0),
+		},
+		SemiFinals: []FootballMatch{
+			makeMatch("cl-sf-1", "Победитель QF1", "Победитель QF2", "SEMI_FINALS", 21, 22, 0),
+			makeMatch("cl-sf-2", "Победитель QF3", "Победитель QF4", "SEMI_FINALS", 22, 22, 0),
+		},
+		Final: []FootballMatch{
+			makeMatch("cl-final", "Победитель SF1", "Победитель SF2", "FINAL", 28, 22, 0),
+		},
+	}
+
+	return bracket
 }
 
 // getRPLStaticStandings — статическая таблица РПЛ (сезон 2025/26)

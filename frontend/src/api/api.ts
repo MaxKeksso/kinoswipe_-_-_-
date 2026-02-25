@@ -245,6 +245,13 @@ export interface FootballMatchesResponse {
   european?: FootballMatch[];
 }
 
+export interface ChampionsLeagueBracket {
+  roundOf16: FootballMatch[];
+  quarterFinals: FootballMatch[];
+  semiFinals: FootballMatch[];
+  final: FootballMatch[];
+}
+
 export interface FootballStanding {
   position: number;
   team: string;
@@ -440,6 +447,11 @@ export const apiService = {
   getFootballStandings: async (league?: 'CL' | 'RPL'): Promise<FootballStandingsResponse> => {
     const params = league ? `?league=${league}` : '';
     const response = await api.get<FootballStandingsResponse>(`/football/standings${params}`);
+    return response.data;
+  },
+
+  getChampionsLeagueBracket: async (): Promise<ChampionsLeagueBracket> => {
+    const response = await api.get<ChampionsLeagueBracket>('/football/cl/bracket');
     return response.data;
   },
 

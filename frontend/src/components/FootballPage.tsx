@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './FootballPage.css';
-import { apiService, FootballMatch, FootballStanding } from '../api/api';
+import { apiService, FootballMatch, FootballStanding, ChampionsLeagueBracket } from '../api/api';
 
 type Tab = 'matches' | 'standings-cl' | 'standings-rpl';
 
@@ -92,6 +92,9 @@ export const FootballPage: React.FC = () => {
   const [loading, setLoading]     = useState(true);
   const [standLoad, setStandLoad] = useState(false);
   const [error, setError]         = useState<string | null>(null);
+  const [clBracket, setClBracket] = useState<ChampionsLeagueBracket | null>(null);
+  const [bracketLoading, setBracketLoading] = useState(false);
+  const [bracketError, setBracketError] = useState<string | null>(null);
 
   const loadMatches = useCallback(async () => {
     try {
@@ -121,6 +124,20 @@ export const FootballPage: React.FC = () => {
     }
   }, [clStandings.length, rplStandings.length]);
 
+  const loadClBracket = useCallback(async () => {
+    if (clBracket) return;
+    try {
+      setBracketLoading(true);
+      setBracketError(null);
+      const data = await apiService.getChampionsLeagueBracket();
+      setClBracket(data);
+    } catch {
+      setBracketError('Не удалось загрузить сетку Лиги чемпионов.');
+    } finally {
+      setBracketLoading(false);
+    }
+  }, [clBracket]);
+
   useEffect(() => {
     loadMatches();
     const interval = setInterval(loadMatches, 5 * 60 * 1000);
@@ -132,7 +149,10 @@ export const FootballPage: React.FC = () => {
     if (activeTab === 'standings-cl' || activeTab === 'standings-rpl') {
       loadStandings();
     }
-  }, [activeTab, loadStandings]);
+    if (activeTab === 'standings-cl') {
+      loadClBracket();
+    }
+  }, [activeTab, loadStandings, loadClBracket]);
 
   const formatDate = (dateString: string) => {
     const [year, month, day] = dateString.split('-').map(Number);
@@ -243,7 +263,7 @@ export const FootballPage: React.FC = () => {
           </>
         )}
 
-        {/* === Таблица ЛЧ === */}
+        {/* === Таблица ЛЧ + сетка === */}
         {activeTab === 'standings-cl' && (
           <>
             {standLoad && <div className="matches-loading">Загрузка таблицы...</div>}
@@ -251,15 +271,43 @@ export const FootballPage: React.FC = () => {
               <div className="matches-loading">Данные недоступны</div>
             )}
             {!standLoad && clStandings.length > 0 && (
-              <StandingsTable
-                standings={clStandings}
-                sepAfter={CL_SEP_AFTER}
-                legendItems={[
-                  { dot: 'direct',   label: 'Выход в плей-офф (1/8)' },
-                  { dot: 'playoff',  label: 'Раунд плей-офф' },
-                  { dot: 'eliminated', label: 'Вылет' },
-                ]}
-              />
+              <>
+                <StandingsTable
+                  standings={clStandings}
+                  sepAfter={CL_SEP_AFTER}
+                  legendItems={[
+                    { dot: 'direct',   label: 'Выход в плей-офф (1/8)' },
+                    { dot: 'playoff',  label: 'Раунд плей-офф' },
+                    { dot: 'eliminated', label: 'Вылет' },
+                  ]}
+                />
+
+                <div className="cl-bracket-section">
+                  <h3>Сетка плей-офф Лиги чемпионов</h3>
+                  {bracketLoading && <div className="matches-loading">Загрузка сетки...</div>}
+                  {bracketError && <div className="matches-error">{bracketError}</div>}
+                  {!bracketLoading && !bracketError && clBracket && (
+                    <div className="cl-bracket">
+                      <div className="cl-bracket-column">
+                        <h4>1/8 финала</h4>
+                        {clBracket.roundOf16.map(renderMatch)}
+                      </div>
+                      <div className="cl-bracket-column">
+                        <h4>1/4 финала</h4>
+                        {clBracket.quarterFinals.map(renderMatch)}
+                      </div>
+                      <div className="cl-bracket-column">
+                        <h4>1/2 финала</h4>
+                        {clBracket.semiFinals.map(renderMatch)}
+                      </div>
+                      <div className="cl-bracket-column">
+                        <h4>Финал</h4>
+                        {clBracket.final.map(renderMatch)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </>
         )}
