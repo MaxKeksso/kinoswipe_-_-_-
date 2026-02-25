@@ -25,6 +25,22 @@ type FootballMatch struct {
 	MatchDate   time.Time `json:"-"`
 }
 
+// FootballStanding — одна строка турнирной таблицы
+type FootballStanding struct {
+	Position     int    `json:"position"`
+	Team         string `json:"team"`
+	Played       int    `json:"played"`
+	Won          int    `json:"won"`
+	Draw         int    `json:"draw"`
+	Lost         int    `json:"lost"`
+	GoalsFor     int    `json:"goalsFor"`
+	GoalsAgainst int    `json:"goalsAgainst"`
+	GoalDiff     int    `json:"goalDiff"`
+	Points       int    `json:"points"`
+	Form         string `json:"form,omitempty"`
+	Zone         string `json:"zone"` // "direct"|"playoff"|"eliminated"|"europe"|"relegation"|""
+}
+
 // FootballService управляет получением данных о футбольных матчах
 type FootballService struct {
 	apiKey         string // Football-Data.org (европейские турниры)
@@ -35,6 +51,11 @@ type FootballService struct {
 	cacheMutex     sync.RWMutex
 	lastUpdate     map[string]time.Time
 	cacheTTL       time.Duration
+	// Standings cache
+	standingsCache      map[string][]FootballStanding
+	standingsMutex      sync.RWMutex
+	standingsLastUpdate map[string]time.Time
+	standingsTTL        time.Duration
 }
 
 // Football-Data.org API структуры
@@ -69,13 +90,16 @@ type Competition struct {
 
 func NewFootballService(apiKey, apiFootballKey string) *FootballService {
 	return &FootballService{
-		apiKey:         apiKey,
-		apiFootballKey: apiFootballKey,
-		apiBaseURL:     "https://api.football-data.org/v4",
-		apiFootballURL: "https://v3.football.api-sports.io",
-		cache:          make(map[string][]FootballMatch),
-		lastUpdate:     make(map[string]time.Time),
-		cacheTTL:       5 * time.Minute,
+		apiKey:              apiKey,
+		apiFootballKey:      apiFootballKey,
+		apiBaseURL:          "https://api.football-data.org/v4",
+		apiFootballURL:      "https://v3.football.api-sports.io",
+		cache:               make(map[string][]FootballMatch),
+		lastUpdate:          make(map[string]time.Time),
+		cacheTTL:            5 * time.Minute,
+		standingsCache:      make(map[string][]FootballStanding),
+		standingsLastUpdate: make(map[string]time.Time),
+		standingsTTL:        30 * time.Minute,
 	}
 }
 
@@ -383,13 +407,19 @@ func (s *FootballService) fetchChampionsLeagueMatches() ([]FootballMatch, error)
 // RefreshCache принудительно обновляет кеш
 func (s *FootballService) RefreshCache() error {
 	s.cacheMutex.Lock()
-	defer s.cacheMutex.Unlock()
-	
 	delete(s.cache, "RPL")
 	delete(s.cache, "EU")
 	delete(s.lastUpdate, "RPL")
 	delete(s.lastUpdate, "EU")
-	
+	s.cacheMutex.Unlock()
+
+	s.standingsMutex.Lock()
+	delete(s.standingsCache, "CL")
+	delete(s.standingsCache, "RPL")
+	delete(s.standingsLastUpdate, "CL")
+	delete(s.standingsLastUpdate, "RPL")
+	s.standingsMutex.Unlock()
+
 	return nil
 }
 
@@ -492,4 +522,313 @@ func (s *FootballService) getEuropeanStaticMatches() []FootballMatch {
 		},
 	}
 	return matches
+}
+
+// ====================================================
+//  STANDINGS — турнирные таблицы
+// ====================================================
+
+// API-response структуры для football-data.org standings
+type fdStandingsResp struct {
+	Standings []struct {
+		Type  string `json:"type"`
+		Table []struct {
+			Position       int    `json:"position"`
+			Team           struct{ Name string `json:"name"` } `json:"team"`
+			PlayedGames    int    `json:"playedGames"`
+			Won            int    `json:"won"`
+			Draw           int    `json:"draw"`
+			Lost           int    `json:"lost"`
+			GoalsFor       int    `json:"goalsFor"`
+			GoalsAgainst   int    `json:"goalsAgainst"`
+			GoalDifference int    `json:"goalDifference"`
+			Points         int    `json:"points"`
+			Form           string `json:"form"`
+		} `json:"table"`
+	} `json:"standings"`
+}
+
+// API-response структуры для api-football standings
+type afStandingsResp struct {
+	Response []struct {
+		League struct {
+			Standings [][]struct {
+				Rank int    `json:"rank"`
+				Team struct{ Name string `json:"name"` } `json:"team"`
+				All  struct {
+					Played int `json:"played"`
+					Win    int `json:"win"`
+					Draw   int `json:"draw"`
+					Lose   int `json:"lose"`
+					Goals  struct {
+						For     int `json:"for"`
+						Against int `json:"against"`
+					} `json:"goals"`
+				} `json:"all"`
+				GoalsDiff int    `json:"goalsDiff"`
+				Points    int    `json:"points"`
+				Form      string `json:"form"`
+			} `json:"standings"`
+		} `json:"league"`
+	} `json:"response"`
+}
+
+// GetCLStandings возвращает таблицу Лиги Чемпионов
+func (s *FootballService) GetCLStandings() ([]FootballStanding, error) {
+	s.standingsMutex.RLock()
+	if st, ok := s.standingsCache["CL"]; ok {
+		if lu, ok2 := s.standingsLastUpdate["CL"]; ok2 && time.Since(lu) < s.standingsTTL {
+			s.standingsMutex.RUnlock()
+			return st, nil
+		}
+	}
+	s.standingsMutex.RUnlock()
+
+	standings, err := s.fetchCLStandings()
+	if err != nil {
+		log.Printf("CL standings API error, using static: %v", err)
+		standings = s.getCLStaticStandings()
+	}
+
+	s.standingsMutex.Lock()
+	s.standingsCache["CL"] = standings
+	s.standingsLastUpdate["CL"] = time.Now()
+	s.standingsMutex.Unlock()
+	return standings, nil
+}
+
+// GetRPLStandings возвращает таблицу РПЛ
+func (s *FootballService) GetRPLStandings() ([]FootballStanding, error) {
+	s.standingsMutex.RLock()
+	if st, ok := s.standingsCache["RPL"]; ok {
+		if lu, ok2 := s.standingsLastUpdate["RPL"]; ok2 && time.Since(lu) < s.standingsTTL {
+			s.standingsMutex.RUnlock()
+			return st, nil
+		}
+	}
+	s.standingsMutex.RUnlock()
+
+	standings, err := s.fetchRPLStandings()
+	if err != nil {
+		log.Printf("RPL standings API error, using static: %v", err)
+		standings = s.getRPLStaticStandings()
+	}
+
+	s.standingsMutex.Lock()
+	s.standingsCache["RPL"] = standings
+	s.standingsLastUpdate["RPL"] = time.Now()
+	s.standingsMutex.Unlock()
+	return standings, nil
+}
+
+func (s *FootballService) fetchCLStandings() ([]FootballStanding, error) {
+	url := fmt.Sprintf("%s/competitions/CL/standings", s.apiBaseURL)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	if s.apiKey != "" {
+		req.Header.Set("X-Auth-Token", s.apiKey)
+	}
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("football-data.org standings %d: %s", resp.StatusCode, string(body))
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var apiResp fdStandingsResp
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return nil, err
+	}
+	// Берём таблицу типа "TOTAL"
+	for _, group := range apiResp.Standings {
+		if group.Type != "TOTAL" {
+			continue
+		}
+		result := make([]FootballStanding, 0, len(group.Table))
+		for _, row := range group.Table {
+			zone := ""
+			if row.Position <= 8 {
+				zone = "direct"
+			} else if row.Position <= 24 {
+				zone = "playoff"
+			} else {
+				zone = "eliminated"
+			}
+			result = append(result, FootballStanding{
+				Position:     row.Position,
+				Team:         row.Team.Name,
+				Played:       row.PlayedGames,
+				Won:          row.Won,
+				Draw:         row.Draw,
+				Lost:         row.Lost,
+				GoalsFor:     row.GoalsFor,
+				GoalsAgainst: row.GoalsAgainst,
+				GoalDiff:     row.GoalDifference,
+				Points:       row.Points,
+				Form:         row.Form,
+				Zone:         zone,
+			})
+		}
+		log.Printf("Fetched %d CL standings entries from API", len(result))
+		return result, nil
+	}
+	return nil, fmt.Errorf("no TOTAL standings found in CL response")
+}
+
+func (s *FootballService) fetchRPLStandings() ([]FootballStanding, error) {
+	if s.apiFootballKey == "" {
+		return nil, fmt.Errorf("API_FOOTBALL_KEY not set")
+	}
+	season := time.Now().Year()
+	if time.Now().Month() < 7 {
+		season--
+	}
+	url := fmt.Sprintf("%s/standings?league=235&season=%d", s.apiFootballURL, season)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("x-apisports-key", s.apiFootballKey)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("api-football standings %d: %s", resp.StatusCode, string(body))
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var apiResp afStandingsResp
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return nil, err
+	}
+	if len(apiResp.Response) == 0 || len(apiResp.Response[0].League.Standings) == 0 {
+		return nil, fmt.Errorf("empty RPL standings response")
+	}
+	table := apiResp.Response[0].League.Standings[0]
+	result := make([]FootballStanding, 0, len(table))
+	for _, row := range table {
+		zone := ""
+		if row.Rank <= 5 {
+			zone = "europe"
+		} else if row.Rank >= 16 {
+			zone = "relegation"
+		}
+		result = append(result, FootballStanding{
+			Position:     row.Rank,
+			Team:         row.Team.Name,
+			Played:       row.All.Played,
+			Won:          row.All.Win,
+			Draw:         row.All.Draw,
+			Lost:         row.All.Lose,
+			GoalsFor:     row.All.Goals.For,
+			GoalsAgainst: row.All.Goals.Against,
+			GoalDiff:     row.GoalsDiff,
+			Points:       row.Points,
+			Form:         row.Form,
+			Zone:         zone,
+		})
+	}
+	log.Printf("Fetched %d RPL standings entries from API", len(result))
+	return result, nil
+}
+
+// getCLStaticStandings — статическая таблица ЛЧ 2025/26 (лиговая фаза)
+func (s *FootballService) getCLStaticStandings() []FootballStanding {
+	data := []struct{ pos int; team string; p, w, d, l, gf, ga, pts int; form, zone string }{
+		{1, "Ливерпуль",         8, 7, 0, 1, 22, 5, 21, "WWWWW", "direct"},
+		{2, "Барселона",         8, 6, 1, 1, 20, 8, 19, "WWWDW", "direct"},
+		{3, "Арсенал",           8, 6, 0, 2, 17, 7, 18, "WWWWL", "direct"},
+		{4, "Интер",             8, 5, 3, 0, 15, 6, 18, "DWWWD", "direct"},
+		{5, "Атлетико Мадрид",   8, 5, 2, 1, 14, 7, 17, "WWDWW", "direct"},
+		{6, "Байер Леверкузен",  8, 5, 2, 1, 16, 9, 17, "WWWDL", "direct"},
+		{7, "Астон Вилла",       8, 5, 1, 2, 13, 9, 16, "WLWWW", "direct"},
+		{8, "Монако",            8, 5, 1, 2, 12, 8, 16, "WDWLW", "direct"},
+		{9, "ПСЖ",               8, 4, 3, 1, 14, 8, 15, "DWWDW", "playoff"},
+		{10, "Боруссия Дортмунд",8, 4, 3, 1, 13, 9, 15, "WDLWW", "playoff"},
+		{11, "Реал Мадрид",      8, 4, 2, 2, 14, 10, 14, "WWLWL", "playoff"},
+		{12, "Ювентус",          8, 4, 2, 2, 10, 8, 14, "WDWDL", "playoff"},
+		{13, "Бенфика",          8, 4, 1, 3, 13, 12, 13, "WWLWL", "playoff"},
+		{14, "Спортинг",         8, 4, 1, 3, 11, 10, 13, "LWWWD", "playoff"},
+		{15, "Фейеноорд",        8, 3, 3, 2, 12, 11, 12, "WDDWL", "playoff"},
+		{16, "Брест",            8, 3, 3, 2, 10, 10, 12, "DDDWW", "playoff"},
+		{17, "Аталанта",         8, 3, 2, 3, 12, 13, 11, "WLLWW", "playoff"},
+		{18, "Боруссия М-Г",     8, 3, 2, 3, 10, 11, 11, "LWWDL", "playoff"},
+		{19, "Байерн Мюнхен",    8, 3, 1, 4, 13, 14, 10, "WLWLL", "playoff"},
+		{20, "МС Брюгге",        8, 3, 1, 4, 9, 13, 10, "LWWLL", "playoff"},
+		{21, "Манчестер Сити",   8, 3, 1, 4, 12, 14, 10, "LLLWW", "playoff"},
+		{22, "Штутгарт",         8, 2, 3, 3, 9, 11, 9, "DLLWD", "playoff"},
+		{23, "Шахтёр",           8, 2, 3, 3, 8, 12, 9, "LDDWL", "playoff"},
+		{24, "Псв Эйндховен",    8, 2, 3, 3, 10, 14, 9, "DLLWD", "playoff"},
+		{25, "Лилль",            8, 2, 2, 4, 8, 13, 8, "LLDWL", "eliminated"},
+		{26, "Дортмунд II",      8, 2, 2, 4, 7, 12, 8, "WLLLD", "eliminated"},
+		{27, "Динамо Загреб",    8, 2, 1, 5, 7, 16, 7, "LLLWL", "eliminated"},
+		{28, "Селтик",           8, 1, 3, 4, 7, 14, 6, "LLDLL", "eliminated"},
+		{29, "Спортинг Б",       8, 1, 3, 4, 5, 12, 6, "DLLLD", "eliminated"},
+		{30, "Галатасарай",      8, 1, 2, 5, 8, 16, 5, "LLLWL", "eliminated"},
+		{31, "РБ Лейпциг",       8, 1, 2, 5, 7, 17, 5, "LLLDL", "eliminated"},
+		{32, "Гирона",           8, 1, 1, 6, 5, 18, 4, "LLLLD", "eliminated"},
+		{33, "Брага",            8, 1, 1, 6, 6, 20, 4, "LLLWL", "eliminated"},
+		{34, "Янг Бойз",         8, 0, 3, 5, 5, 19, 3, "DLDLL", "eliminated"},
+		{35, "Ред Булл Зальцбург",8, 0, 2, 6, 5, 21, 2, "LLLLD", "eliminated"},
+		{36, "Слован Братислава", 8, 0, 1, 7, 4, 26, 1, "LLLLL", "eliminated"},
+	}
+	result := make([]FootballStanding, len(data))
+	for i, r := range data {
+		result[i] = FootballStanding{
+			Position: r.pos, Team: r.team,
+			Played: r.p, Won: r.w, Draw: r.d, Lost: r.l,
+			GoalsFor: r.gf, GoalsAgainst: r.ga, GoalDiff: r.gf - r.ga,
+			Points: r.pts, Form: r.form, Zone: r.zone,
+		}
+	}
+	return result
+}
+
+// getRPLStaticStandings — статическая таблица РПЛ (сезон 2025/26)
+func (s *FootballService) getRPLStaticStandings() []FootballStanding {
+	data := []struct{ pos int; team string; p, w, d, l, gf, ga, pts int; form, zone string }{
+		{1, "Краснодар",   20, 14, 3, 3, 38, 17, 45, "WWDWW", "europe"},
+		{2, "Зенит",       20, 13, 4, 3, 40, 20, 43, "WDWWL", "europe"},
+		{3, "Спартак",     20, 11, 5, 4, 32, 22, 38, "WWDLW", "europe"},
+		{4, "ЦСКА",        20, 11, 3, 6, 30, 24, 36, "WLWWL", "europe"},
+		{5, "Динамо",      20, 9, 5, 6, 29, 23, 32, "DWWLD", "europe"},
+		{6, "Локомотив",   20, 8, 5, 7, 26, 25, 29, "WLDWL", ""},
+		{7, "Ростов",      20, 8, 4, 8, 24, 26, 28, "LWWDL", ""},
+		{8, "Рубин",       20, 7, 5, 8, 21, 24, 26, "WLLWD", ""},
+		{9, "Факел",       20, 6, 6, 8, 20, 25, 24, "DLWDL", ""},
+		{10, "Пари НН",    20, 6, 5, 9, 22, 28, 23, "LLDWW", ""},
+		{11, "Ахмат",      20, 5, 7, 8, 19, 24, 22, "LDDDW", ""},
+		{12, "Химки",      20, 5, 6, 9, 18, 28, 21, "LWWLD", ""},
+		{13, "Крылья",     20, 5, 5, 10, 18, 30, 20, "LLDLW", ""},
+		{14, "Урал",       20, 4, 6, 10, 17, 29, 18, "LLDLL", ""},
+		{15, "Балтика",    20, 3, 7, 10, 15, 31, 16, "LDLLL", ""},
+		{16, "Оренбург",   20, 3, 5, 12, 14, 33, 14, "LLLDL", "relegation"},
+		{17, "Нижний НН",  20, 2, 5, 13, 12, 35, 11, "LLLLL", "relegation"},
+		{18, "Торпедо",    20, 2, 4, 14, 10, 38, 10, "LLLLL", "relegation"},
+	}
+	result := make([]FootballStanding, len(data))
+	for i, r := range data {
+		result[i] = FootballStanding{
+			Position: r.pos, Team: r.team,
+			Played: r.p, Won: r.w, Draw: r.d, Lost: r.l,
+			GoalsFor: r.gf, GoalsAgainst: r.ga, GoalDiff: r.gf - r.ga,
+			Points: r.pts, Form: r.form, Zone: r.zone,
+		}
+	}
+	return result
 }

@@ -85,6 +85,38 @@ func (h *FootballHandler) GetMatches(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(matches)
 }
 
+// GetStandings возвращает турнирную таблицу (league=CL или RPL)
+func (h *FootballHandler) GetStandings(w http.ResponseWriter, r *http.Request) {
+	league := r.URL.Query().Get("league")
+	w.Header().Set("Content-Type", "application/json")
+
+	switch league {
+	case "CL":
+		standings, err := h.footballService.GetCLStandings()
+		if err != nil {
+			log.Printf("Error fetching CL standings: %v", err)
+			http.Error(w, "Failed to fetch CL standings", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{"standings": standings, "league": "CL"})
+	case "RPL":
+		standings, err := h.footballService.GetRPLStandings()
+		if err != nil {
+			log.Printf("Error fetching RPL standings: %v", err)
+			http.Error(w, "Failed to fetch RPL standings", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{"standings": standings, "league": "RPL"})
+	default:
+		clStandings, _ := h.footballService.GetCLStandings()
+		rplStandings, _ := h.footballService.GetRPLStandings()
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"cl":  clStandings,
+			"rpl": rplStandings,
+		})
+	}
+}
+
 // RefreshMatches принудительно обновляет кеш матчей
 func (h *FootballHandler) RefreshMatches(w http.ResponseWriter, r *http.Request) {
 	err := h.footballService.RefreshCache()

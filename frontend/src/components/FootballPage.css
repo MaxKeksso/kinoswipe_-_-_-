@@ -356,6 +356,194 @@
   color: var(--text-muted);
 }
 
+/* ---- Tab navigation ---- */
+.football-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+}
+
+.football-tab {
+  flex: 1;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.football-tab:hover:not(.football-tab--active) {
+  background: var(--bg-card);
+  color: var(--text-secondary);
+}
+
+.football-tab--active {
+  background: var(--accent-gradient);
+  color: #fff;
+  box-shadow: var(--shadow-sm), 0 0 12px var(--accent-glow);
+}
+
+/* ---- Standings table ---- */
+.standings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.standings-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-dot--direct   { background: #10b981; }
+.legend-dot--playoff  { background: #fbbf24; }
+.legend-dot--eliminated { background: #ef4444; }
+.legend-dot--europe   { background: #10b981; }
+.legend-dot--relegation { background: #ef4444; }
+
+.standings-table-wrap {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.standings-table thead th {
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.standings-table thead th:nth-child(2) {
+  text-align: left;
+  padding-left: 10px;
+}
+
+.standings-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+
+.standings-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.standings-table tbody tr:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+/* Zone stripe on the left */
+.standings-table tbody tr.zone-direct    { border-left: 3px solid #10b981; }
+.standings-table tbody tr.zone-playoff   { border-left: 3px solid #fbbf24; }
+.standings-table tbody tr.zone-eliminated { border-left: 3px solid #ef4444; }
+.standings-table tbody tr.zone-europe    { border-left: 3px solid #10b981; }
+.standings-table tbody tr.zone-relegation { border-left: 3px solid #ef4444; }
+
+/* Separator lines between zones */
+.standings-table tbody tr.zone-sep-below td {
+  border-bottom: 2px solid var(--border-hover);
+}
+
+.standings-table td {
+  padding: 9px 8px;
+  text-align: center;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.standings-table td.td-pos {
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 32px;
+}
+
+.standings-table td.td-team {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 10px;
+}
+
+.standings-table td.td-pts {
+  font-weight: 800;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.standings-table td.td-gd {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.td-gd.positive { color: #10b981; }
+.td-gd.negative { color: #ef4444; }
+
+/* Form pills */
+.form-pills {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+}
+
+.form-pill {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.form-pill.W { background: #10b981; }
+.form-pill.D { background: #fbbf24; color: #1a1a1a; }
+.form-pill.L { background: #ef4444; }
+
 /* ---- Responsive ---- */
 @media (max-width: 900px) {
   .football-page {
@@ -386,5 +574,22 @@
 
   .match-team {
     font-size: 0.82rem;
+  }
+
+  .football-tab {
+    font-size: 0.78rem;
+    padding: 8px 6px;
+  }
+
+  .standings-table td,
+  .standings-table thead th {
+    padding: 7px 4px;
+    font-size: 0.78rem;
+  }
+
+  /* На мобиле скрываем менее важные колонки */
+  .standings-table .col-goals,
+  .standings-table .col-form {
+    display: none;
   }
 }

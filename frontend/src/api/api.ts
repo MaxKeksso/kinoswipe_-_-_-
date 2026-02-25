@@ -245,6 +245,26 @@ export interface FootballMatchesResponse {
   european?: FootballMatch[];
 }
 
+export interface FootballStanding {
+  position: number;
+  team: string;
+  played: number;
+  won: number;
+  draw: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDiff: number;
+  points: number;
+  form?: string;
+  zone: 'direct' | 'playoff' | 'eliminated' | 'europe' | 'relegation' | '';
+}
+
+export interface FootballStandingsResponse {
+  cl?: FootballStanding[];
+  rpl?: FootballStanding[];
+}
+
 // API методы
 export const apiService = {
   // Пользователи
@@ -414,6 +434,12 @@ export const apiService = {
   getFootballMatches: async (league?: 'RPL' | 'CL' | 'EU'): Promise<FootballMatchesResponse> => {
     const params = league ? `?league=${league}` : '';
     const response = await api.get<FootballMatchesResponse>(`/football/matches${params}`);
+    return response.data;
+  },
+
+  getFootballStandings: async (league?: 'CL' | 'RPL'): Promise<FootballStandingsResponse> => {
+    const params = league ? `?league=${league}` : '';
+    const response = await api.get<FootballStandingsResponse>(`/football/standings${params}`);
     return response.data;
   },
 

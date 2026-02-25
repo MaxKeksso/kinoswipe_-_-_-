@@ -157,6 +157,7 @@ func main() {
 
 	// Football routes
 	api.HandleFunc("/football/matches", footballHandler.GetMatches).Methods("GET")
+	api.HandleFunc("/football/standings", footballHandler.GetStandings).Methods("GET")
 	api.HandleFunc("/football/refresh", footballHandler.RefreshMatches).Methods("POST")
 
 	// Feedback routes
