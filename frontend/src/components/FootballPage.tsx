@@ -181,7 +181,9 @@ export const FootballPage: React.FC = () => {
         <span className="match-datetime-icon">📅</span>
         <span>{formatDate(match.date)}</span>
         <span>·</span>
-        <span className="match-datetime-time">{match.time} МСК</span>
+        <span className="match-datetime-time">
+          {match.time === '00:00' ? 'Время уточняется' : `${match.time} МСК`}
+        </span>
       </div>
     </div>
   );

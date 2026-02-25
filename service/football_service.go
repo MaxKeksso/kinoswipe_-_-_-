@@ -471,7 +471,12 @@ func (s *FootballService) fetchCLBracket() (*CLBracket, error) {
 	}
 
 	for _, m := range apiResp.Matches {
-		switch m.Stage {
+		stage := m.Stage
+		// football-data.org может использовать LAST_16 вместо ROUND_OF_16
+		if stage == "LAST_16" {
+			stage = "ROUND_OF_16"
+		}
+		switch stage {
 		case "ROUND_OF_16", "QUARTER_FINALS", "SEMI_FINALS", "FINAL":
 			// интересуют только стадии плей-офф
 		default:
@@ -508,7 +513,7 @@ func (s *FootballService) fetchCLBracket() (*CLBracket, error) {
 			match.AwayScore = m.Score.FullTime.AwayTeam
 		}
 
-		switch m.Stage {
+		switch stage {
 		case "ROUND_OF_16":
 			bracket.RoundOf16 = append(bracket.RoundOf16, match)
 		case "QUARTER_FINALS":
