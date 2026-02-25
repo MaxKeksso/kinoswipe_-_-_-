@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SwipeCard } from './components/SwipeCard';
+import { MovieDetails } from './components/MovieDetails';
 import { AuthForm } from './components/AuthForm';
-import { PremiereSidebar } from './components/PremiereSidebar';
 import { MatchLinksPage } from './components/MatchLinksPage';
 import { AdminPanel } from './components/AdminPanel';
 import { GenreQuestionnaire } from './components/GenreQuestionnaire';
@@ -52,6 +52,38 @@ const App: React.FC = () => {
   const loadRoomMembersRef = useRef<(() => Promise<void>) | null>(null);
   const [newMemberAlert, setNewMemberAlert] = useState(false);
   const prevMemberCountRef = useRef(0);
+
+  // Swipe indicators (directly mutate DOM — no re-renders)
+  const likeIndRef = useRef<HTMLDivElement>(null);
+  const dislikeIndRef = useRef<HTMLDivElement>(null);
+  const handleDragUpdate = useCallback((x: number) => {
+    const likeEl = likeIndRef.current;
+    const dislikeEl = dislikeIndRef.current;
+    if (!likeEl || !dislikeEl) return;
+    const t = Math.min(1, Math.abs(x) / 100);
+    if (x > 0) {
+      likeEl.style.opacity = String(t);
+      dislikeEl.style.opacity = '0';
+    } else if (x < 0) {
+      dislikeEl.style.opacity = String(t);
+      likeEl.style.opacity = '0';
+    } else {
+      likeEl.style.opacity = '0';
+      dislikeEl.style.opacity = '0';
+    }
+  }, []);
+
+  // Undo
+  const [prevMovieIndex, setPrevMovieIndex] = useState<number | null>(null);
+  const handleUndo = () => {
+    if (prevMovieIndex !== null) {
+      setCurrentMovieIndex(prevMovieIndex);
+      setPrevMovieIndex(null);
+    }
+  };
+
+  // Movie details modal (tap on card)
+  const [showMovieDetails, setShowMovieDetails] = useState(false);
 
   // Формы
   const [roomCode, setRoomCode] = useState('');
@@ -774,6 +806,7 @@ const App: React.FC = () => {
 
       // Переходим к следующему фильму только если нет матча
       if (movies && currentMovieIndex < movies.length - 1) {
+        setPrevMovieIndex(currentMovieIndex);
         setCurrentMovieIndex(currentMovieIndex + 1);
       } else {
         // Фильмы закончились - загружаем актуальные матчи и проверяем
@@ -822,6 +855,7 @@ const App: React.FC = () => {
     } catch (err: any) {
       if (err.response?.status === 409 && err.response?.data?.error?.includes('Already swiped')) {
         if (movies && currentMovieIndex < movies.length - 1) {
+          setPrevMovieIndex(currentMovieIndex);
           setCurrentMovieIndex(currentMovieIndex + 1);
         } else {
           if (room) {
@@ -1060,9 +1094,6 @@ const App: React.FC = () => {
   if (state === 'room-selection') {
     const premieresList = Array.isArray(premieres) ? premieres : [];
     const activePremieres = premieresList.filter(p => p.is_active);
-    const leftPremieres = premieresList.filter(p => p.position === 'left' && p.is_active);
-    const rightPremieres = premieresList.filter(p => p.position === 'right' && p.is_active);
-    
     // Отладка: выводим информацию о премьерах
     console.log('Premieres loaded:', premieresList.length, 'Active:', activePremieres.length);
     // Получаем жанры пользователя (JSON.parse может вернуть null — всегда приводим к массиву)
@@ -1318,6 +1349,22 @@ const App: React.FC = () => {
                 >
                   {roomCodeCopied ? '✓ Код скопирован' : '📋 Скопировать код'}
                 </button>
+                {'share' in navigator && (
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={() => {
+                      const url = `${window.location.origin}${window.location.pathname || ''}?code=${room.code}`;
+                      (navigator as any).share({
+                        title: `KinoSwipe — Комната ${room.code}`,
+                        text: `Присоединяйся к нашей комнате в KinoSwipe! Код: ${room.code}`,
+                        url,
+                      }).catch(() => {});
+                    }}
+                  >
+                    📤 Поделиться
+                  </button>
+                )}
               </div>
               {(() => {
                 const isPublicSite = typeof window !== 'undefined' && window.location.origin && !/^https?:\/\/localhost(:\d+)?$/i.test(window.location.origin);
@@ -1546,10 +1593,15 @@ const App: React.FC = () => {
               <SwipeCard
                 key={currentMovie.id}
                 onSwipe={handleCardSwipe}
+                onTap={() => setShowMovieDetails(true)}
+                onDragUpdate={handleDragUpdate}
                 preventSwipe={['up', 'down']}
                 className="swipe"
               >
                 <div className="card card--active">
+                  {/* Swipe indicators */}
+                  <div className="swipe-indicator like-indicator" ref={likeIndRef}>♥ ЛАЙК</div>
+                  <div className="swipe-indicator dislike-indicator" ref={dislikeIndRef}>✕ НЕТ</div>
                   <img
                     src={currentMovie.poster_url}
                     alt={getMovieDisplayTitle(currentMovie)}
@@ -1582,6 +1634,15 @@ const App: React.FC = () => {
                 ✕
               </button>
               <button
+                onClick={handleUndo}
+                disabled={prevMovieIndex === null || loading}
+                className="swipe-circle undo-circle"
+                aria-label="Вернуть"
+                title="Вернуть предыдущий фильм"
+              >
+                ↩
+              </button>
+              <button
                 onClick={() => handleSwipe('right')}
                 disabled={loading}
                 className="swipe-circle like-circle"
@@ -1590,6 +1651,14 @@ const App: React.FC = () => {
                 ♥
               </button>
             </div>
+
+            {showMovieDetails && currentMovie && (
+              <MovieDetails
+                movie={currentMovie}
+                isAdmin={user?.user_type === 'admin'}
+                onClose={() => setShowMovieDetails(false)}
+              />
+            )}
           </>
         )}
 

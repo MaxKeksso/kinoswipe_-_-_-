@@ -773,6 +773,38 @@ input:disabled {
   -webkit-box-orient: vertical;
 }
 
+/* ---- Swipe indicators (like / dislike overlay on card) ---- */
+.swipe-indicator {
+  position: absolute;
+  top: 28px;
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  border: 3px solid;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.like-indicator {
+  left: 16px;
+  color: var(--like);
+  border-color: var(--like);
+  background: rgba(16, 185, 129, 0.12);
+  transform: rotate(-15deg);
+}
+
+.dislike-indicator {
+  right: 16px;
+  color: var(--dislike);
+  border-color: var(--dislike);
+  background: rgba(239, 68, 68, 0.12);
+  transform: rotate(15deg);
+}
+
 /* ---- Swipe action buttons (round circles) ---- */
 .swipe-actions {
   display: flex;
@@ -832,6 +864,23 @@ input:disabled {
   background: rgba(239, 68, 68, 0.20);
   box-shadow: 0 0 22px var(--dislike-glow), var(--shadow-md);
   transform: scale(1.10);
+}
+
+.undo-circle {
+  width: 52px;
+  height: 52px;
+  font-size: 20px;
+  border-color: var(--text-muted);
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.undo-circle:hover:not(:disabled) {
+  border-color: var(--accent-light);
+  color: var(--accent-light);
+  background: rgba(139, 92, 246, 0.12);
+  box-shadow: 0 0 16px var(--accent-glow), var(--shadow-sm);
+  transform: scale(1.08);
 }
 
 /* ---- Match modal ---- */

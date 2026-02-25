@@ -3,6 +3,8 @@ import React, { useRef, useCallback, useEffect } from 'react';
 interface SwipeCardProps {
   children: React.ReactNode;
   onSwipe?: (direction: 'left' | 'right') => void;
+  onTap?: () => void;
+  onDragUpdate?: (x: number) => void;
   preventSwipe?: ('up' | 'down' | 'left' | 'right')[];
   className?: string;
 }
@@ -10,6 +12,8 @@ interface SwipeCardProps {
 export const SwipeCard: React.FC<SwipeCardProps> = ({
   children,
   onSwipe,
+  onTap,
+  onDragUpdate,
   preventSwipe = ['up', 'down'],
   className = '',
 }) => {
@@ -54,12 +58,14 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
     d.curX = x;
     d.curY = y;
     applyStyle(x, y, true);
-  }, [applyStyle, preventSwipe]);
+    onDragUpdate?.(x);
+  }, [applyStyle, preventSwipe, onDragUpdate]);
 
   const onEnd = useCallback(() => {
     const d = dragRef.current;
     if (!d.active) return;
     d.active = false;
+    onDragUpdate?.(0);
 
     const THRESHOLD = 80;
     if (Math.abs(d.curX) > THRESHOLD) {
@@ -76,10 +82,13 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
         onSwipe?.(direction);
         applyStyle(0, 0, false);
       }, 380);
+    } else if (Math.abs(d.curX) < 10 && Math.abs(d.curY) < 10) {
+      applyStyle(0, 0, false);
+      onTap?.();
     } else {
       applyStyle(0, 0, false);
     }
-  }, [applyStyle, onSwipe]);
+  }, [applyStyle, onSwipe, onTap, onDragUpdate]);
 
   // Mouse handlers
   const handleMouseDown = (e: React.MouseEvent) => onStart(e.clientX, e.clientY);

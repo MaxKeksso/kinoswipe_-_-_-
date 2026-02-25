@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "KinoSwipe",
+  "name": "KinoSwipe — Выбирай фильмы вместе",
+  "description": "Свайпайте фильмы как в Tinder и находите совпадения с друзьями",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +21,8 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#8b5cf6",
+  "background_color": "#0f1022",
+  "orientation": "portrait",
+  "categories": ["entertainment"]
 }
