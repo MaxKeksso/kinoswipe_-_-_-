@@ -781,6 +781,7 @@ input:disabled {
   gap: 56px;
   padding: 12px 0 8px;
   margin: 0;
+  flex-shrink: 0;   /* никогда не сжимается — всегда видно */
 }
 
 .swipe-circle {
@@ -1534,13 +1535,27 @@ input:disabled {
   .rooms-grid { grid-template-columns: 1fr; }
   .footer-content { grid-template-columns: 1fr; }
 
-  .swipe-container { padding: 16px 12px; }
-  .cardContainer { height: 72vh; max-height: 600px; min-height: 400px; max-width: 100%; margin: 10px auto; }
-  .card { width: min(310px, calc(100vw - 28px)); height: min(530px, calc(100vh - 200px)); }
-  .card img { height: 64%; }
-  .card-info { padding: 14px; }
-  .card-info h3 { font-size: 18px; }
-  .swipe-actions { gap: 36px; padding: 10px 0 6px; }
+  /* На мобилке контейнер = экран минус топбар (56px), без скролла */
+  .swipe-container {
+    padding: 14px 12px 0;
+    height: calc(100dvh - 56px);
+    min-height: unset;
+    overflow: hidden;
+  }
+  /* cardContainer занимает всё оставшееся пространство между хедером и кнопками */
+  .cardContainer {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    max-width: 100%;
+    margin: 8px auto 0;
+  }
+  /* Карточка вписывается в доступное пространство */
+  .card { width: min(310px, calc(100vw - 28px)); height: min(490px, calc(100dvh - 220px)); }
+  .card img { height: 62%; }
+  .card-info { padding: 12px; }
+  .card-info h3 { font-size: 17px; }
+  .swipe-actions { gap: 36px; padding: 10px 0 max(10px, env(safe-area-inset-bottom, 10px)); }
   .swipe-circle { width: 60px; height: 60px; font-size: 21px; }
 
   .header { flex-direction: column; align-items: flex-start; }
@@ -1553,9 +1568,10 @@ input:disabled {
 
 @media (max-width: 480px) {
   .room-selection-container { padding: 16px 12px; }
-  .card { width: min(275px, calc(100vw - 20px)); height: min(470px, calc(100vh - 190px)); }
-  .cardContainer { height: 68vh; min-height: 370px; }
-  .card-info h3 { font-size: 16px; }
+  .swipe-container { padding: 10px 10px 0; }
+  .card { width: min(260px, calc(100vw - 20px)); height: min(430px, calc(100dvh - 210px)); }
+  .card img { height: 60%; }
+  .card-info h3 { font-size: 15px; }
   .swipe-circle { width: 56px; height: 56px; font-size: 20px; }
   .swipe-actions { gap: 28px; }
   .create-room-card, .join-room-card { padding: 20px 16px; }
