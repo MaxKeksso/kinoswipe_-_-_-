@@ -57,39 +57,43 @@
    Светлая тема — переопределяем только нужные переменные
    ======================================================== */
 [data-theme="light"] {
-  --bg-base:     #eef0f9;
-  --bg-surface:  #ffffff;
-  --bg-elevated: #ffffff;
-  --bg-card:     #f4f6ff;
-  --bg-input:    #eaecf8;
+  /* Фоны с чёткой иерархией — не сливаются */
+  --bg-base:     #dde1f5;   /* страница — насыщенный лавандовый */
+  --bg-surface:  #eef0fb;   /* сайдбар */
+  --bg-elevated: #f6f7ff;   /* карточки */
+  --bg-card:     #ffffff;   /* вложенные карточки */
+  --bg-input:    #e8eaf8;   /* поля ввода */
 
-  --border:        rgba(0, 0, 0, 0.09);
-  --border-hover:  rgba(124, 58, 237, 0.38);
-  --border-active: rgba(124, 58, 237, 0.68);
+  /* Границы — фиолетовый контур, хорошо виден */
+  --border:        rgba(79, 70, 229, 0.22);
+  --border-hover:  rgba(109, 40, 217, 0.52);
+  --border-active: rgba(109, 40, 217, 0.80);
 
-  --accent:          #6d28d9;
-  --accent-light:    #5b21b6;
-  --accent-dark:     #4c1d95;
-  --accent-glow:     rgba(109, 40, 217, 0.14);
+  --accent:          #5b21b6;
+  --accent-light:    #4c1d95;
+  --accent-dark:     #3b0764;
+  --accent-glow:     rgba(91, 33, 182, 0.18);
   --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #a855f7 100%);
 
-  --like:         #059669;
-  --like-glow:    rgba(5, 150, 105, 0.18);
-  --dislike:      #dc2626;
-  --dislike-glow: rgba(220, 38, 38, 0.18);
+  --like:         #047857;
+  --like-glow:    rgba(4, 120, 87, 0.22);
+  --dislike:      #b91c1c;
+  --dislike-glow: rgba(185, 28, 28, 0.22);
 
-  --text:           #11112b;
-  --text-secondary: rgba(17, 17, 43, 0.62);
-  --text-muted:     rgba(17, 17, 43, 0.38);
+  /* Текст — тёмный и контрастный */
+  --text:           #0c0c24;
+  --text-secondary: rgba(12, 12, 36, 0.68);
+  --text-muted:     rgba(12, 12, 36, 0.44);
 
-  --success: #059669;
-  --error:   #dc2626;
-  --warning: #b45309;
+  --success: #047857;
+  --error:   #b91c1c;
+  --warning: #92400e;
 
-  --shadow-sm:   0 1px 6px  rgba(0, 0, 0, 0.09);
-  --shadow-md:   0 4px 18px rgba(0, 0, 0, 0.11);
-  --shadow-lg:   0 12px 44px rgba(0, 0, 0, 0.13);
-  --shadow-glow: 0 0 24px rgba(109, 40, 217, 0.12);
+  /* Тени — фиолетовый подтон */
+  --shadow-sm:   0 1px 8px  rgba(79, 70, 229, 0.12);
+  --shadow-md:   0 4px 20px rgba(79, 70, 229, 0.16);
+  --shadow-lg:   0 12px 44px rgba(79, 70, 229, 0.18);
+  --shadow-glow: 0 0 28px rgba(91, 33, 182, 0.16);
 }
 
 [data-theme="light"] body {

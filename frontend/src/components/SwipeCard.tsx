@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 
 interface SwipeCardProps {
   children: React.ReactNode;
@@ -13,145 +13,115 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   preventSwipe = ['up', 'down'],
   className = '',
 }) => {
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const initialPos = useRef({ x: 0, y: 0 });
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({
+    active: false,
+    startX: 0,
+    startY: 0,
+    curX: 0,
+    curY: 0,
+  });
 
-  const handleStart = (clientX: number, clientY: number) => {
-    setIsDragging(true);
-    setStartPos({ x: clientX, y: clientY });
-    initialPos.current = { x: offset.x, y: offset.y };
-  };
+  // Directly mutate DOM style — no React re-renders during drag
+  const applyStyle = useCallback((x: number, y: number, dragging: boolean) => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const rotation = x / 18;
+    const scale = dragging ? 1.03 : 1;
+    const opacity = Math.max(0, 1 - Math.abs(x) / 420);
+    if (dragging) {
+      el.style.transition = 'none';
+    } else {
+      el.style.transition =
+        'transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease-out';
+    }
+    el.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`;
+    el.style.opacity = String(opacity);
+  }, []);
 
-  const handleMove = (clientX: number, clientY: number) => {
-    if (!isDragging) return;
+  const onStart = useCallback((clientX: number, clientY: number) => {
+    dragRef.current = { active: true, startX: clientX, startY: clientY, curX: 0, curY: 0 };
+    if (wrapperRef.current) wrapperRef.current.style.transition = 'none';
+  }, []);
 
-    const deltaX = clientX - startPos.x;
-    const deltaY = clientY - startPos.y;
+  const onMove = useCallback((clientX: number, clientY: number) => {
+    const d = dragRef.current;
+    if (!d.active) return;
+    const x = clientX - d.startX;
+    const y = (clientY - d.startY) * 0.08;
+    if (preventSwipe?.includes('left') && x < 0) return;
+    if (preventSwipe?.includes('right') && x > 0) return;
+    d.curX = x;
+    d.curY = y;
+    applyStyle(x, y, true);
+  }, [applyStyle, preventSwipe]);
 
-    // Ограничиваем свайп только по горизонтали
-    if (preventSwipe?.includes('left') && deltaX < 0) return;
-    if (preventSwipe?.includes('right') && deltaX > 0) return;
+  const onEnd = useCallback(() => {
+    const d = dragRef.current;
+    if (!d.active) return;
+    d.active = false;
 
-    setOffset({
-      x: initialPos.current.x + deltaX,
-      y: initialPos.current.y + deltaY * 0.1, // Небольшой вертикальный эффект
-    });
-  };
-
-  const handleEnd = () => {
-    if (!isDragging) return;
-    
-    const threshold = 80; // Порог для свайпа (уменьшен для более чувствительного свайпа)
-    const currentOffsetX = offset.x;
-
-    if (Math.abs(currentOffsetX) > threshold) {
-      const direction: 'left' | 'right' = currentOffsetX > 0 ? 'right' : 'left';
-      
-      // Улучшенная анимация ухода карточки с более плавным движением
-      const exitX = currentOffsetX > 0 
-        ? window.innerWidth + 200 
-        : -window.innerWidth - 200;
-      const exitY = offset.y * 0.5; // Меньший вертикальный эффект
-      
-      setOffset({
-        x: exitX,
-        y: exitY,
-      });
-
+    const THRESHOLD = 80;
+    if (Math.abs(d.curX) > THRESHOLD) {
+      const direction: 'left' | 'right' = d.curX > 0 ? 'right' : 'left';
+      const exitX = d.curX > 0 ? window.innerWidth + 250 : -(window.innerWidth + 250);
+      const exitRot = exitX / 18;
+      const el = wrapperRef.current;
+      if (el) {
+        el.style.transition = 'transform 0.38s ease-out, opacity 0.28s ease-out';
+        el.style.transform = `translate(${exitX}px, ${d.curY * 0.4}px) rotate(${exitRot}deg)`;
+        el.style.opacity = '0';
+      }
       setTimeout(() => {
         onSwipe?.(direction);
-        setOffset({ x: 0, y: 0 });
-      }, 300);
+        applyStyle(0, 0, false);
+      }, 380);
     } else {
-      // Плавный возврат карточки на место с пружинящим эффектом
-      setOffset({ x: 0, y: 0 });
+      applyStyle(0, 0, false);
     }
-    
-    setIsDragging(false);
-  };
+  }, [applyStyle, onSwipe]);
 
-  // Mouse events
-  const handleMouseDown = (e: React.MouseEvent) => {
-    handleStart(e.clientX, e.clientY);
-  };
+  // Mouse handlers
+  const handleMouseDown = (e: React.MouseEvent) => onStart(e.clientX, e.clientY);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    handleMove(e.clientX, e.clientY);
-  };
-
-  const handleMouseUp = () => {
-    handleEnd();
-  };
-
-  // Touch events
+  // Touch handlers
   const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    handleStart(touch.clientX, touch.clientY);
+    const t = e.touches[0];
+    onStart(t.clientX, t.clientY);
   };
-
   const handleTouchMove = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    handleMove(touch.clientX, touch.clientY);
+    const t = e.touches[0];
+    onMove(t.clientX, t.clientY);
   };
+  const handleTouchEnd = () => onEnd();
 
-  const handleTouchEnd = () => {
-    handleEnd();
-  };
-
-  // Глобальные обработчики для мыши
+  // Global mouse move/up (so drag works even when cursor leaves element)
   useEffect(() => {
-    if (isDragging) {
-      const handleGlobalMouseMove = (e: MouseEvent) => {
-        handleMove(e.clientX, e.clientY);
-      };
-
-      const handleGlobalMouseUp = () => {
-        handleEnd();
-      };
-
-      document.addEventListener('mousemove', handleGlobalMouseMove);
-      document.addEventListener('mouseup', handleGlobalMouseUp);
-
-      return () => {
-        document.removeEventListener('mousemove', handleGlobalMouseMove);
-        document.removeEventListener('mouseup', handleGlobalMouseUp);
-      };
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDragging, startPos.x, startPos.y, initialPos.current.x, initialPos.current.y]);
-
-  // Улучшенная формула вращения и прозрачности
-  const rotation = offset.x / 15; // Более выраженное вращение
-  const opacity = Math.max(0, 1 - Math.abs(offset.x) / 400);
-  const scale = isDragging ? 1.05 : 1; // Легкое увеличение при перетаскивании
-  
-  // Цветовая индикация направления свайпа (закомментировано для будущего использования)
-  // const likeOpacity = offset.x > 0 ? Math.min(1, offset.x / 150) : 0;
-  // const dislikeOpacity = offset.x < 0 ? Math.min(1, Math.abs(offset.x) / 150) : 0;
+    const move = (e: MouseEvent) => onMove(e.clientX, e.clientY);
+    const up = () => onEnd();
+    document.addEventListener('mousemove', move, { passive: true });
+    document.addEventListener('mouseup', up);
+    return () => {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+    };
+  }, [onMove, onEnd]);
 
   return (
     <div
-      ref={cardRef}
+      ref={wrapperRef}
       className={className}
       style={{
-        transform: `translate(${offset.x}px, ${offset.y}px) rotate(${rotation}deg) scale(${scale})`,
-        opacity: opacity < 0 ? 0 : opacity,
-        transition: isDragging 
-          ? 'none' 
-          : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease-out',
-        cursor: isDragging ? 'grabbing' : 'grab',
         position: 'absolute',
         width: '100%',
         height: '100%',
-        zIndex: isDragging ? 10 : 1,
+        zIndex: 5,          // выше behind-1 (z:2) и behind-2 (z:1)
+        cursor: 'grab',
+        touchAction: 'none',
+        userSelect: 'none',
+        willChange: 'transform',
       }}
       onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

@@ -6,7 +6,6 @@ import { Theme } from '../hooks/useTheme';
 type AppState =
   | 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting'
   | 'swiping' | 'match' | 'admin' | 'match-links' | 'football'
-  | 'split-subscribe' | 'outfit-math' | 'gift-genius' | 'ai-mediator'
   | 'vibe' | 'movie-roulette' | 'evening-recipe';
 
 interface SidebarProps {
@@ -40,15 +39,6 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     title: 'Спорт',
     items: [
       { state: 'football', label: 'Футбол', icon: '⚽' },
-    ],
-  },
-  {
-    title: 'Инструменты',
-    items: [
-      { state: 'split-subscribe', label: 'Split & Subscribe', icon: '💳' },
-      { state: 'outfit-math',     label: 'OutfitMath',        icon: '👗' },
-      { state: 'gift-genius',     label: 'GiftGenius',        icon: '🎁' },
-      { state: 'ai-mediator',     label: 'AI-Медиатор',       icon: '🤝' },
     ],
   },
 ];

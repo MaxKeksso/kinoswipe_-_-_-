@@ -9,10 +9,6 @@ import { RecommendationPage } from './components/RecommendationPage';
 import { Profile } from './components/Profile';
 import { MovieLibrary } from './components/MovieLibrary';
 import { FootballPage } from './components/FootballPage';
-import SplitSubscribePage from './components/SplitSubscribePage';
-import OutfitMathPage from './components/OutfitMathPage';
-import GiftGeniusPage from './components/GiftGeniusPage';
-import AIMediatorPage from './components/AIMediatorPage';
 import VibePage from './components/VibePage';
 import MovieRoulettePage from './components/MovieRoulettePage';
 import EveningRecipePage from './components/EveningRecipePage';
@@ -27,7 +23,7 @@ const TIMEWEB_WIDGET_SRC =
   process.env.REACT_APP_TIMEWEB_WIDGET_SRC ||
   'https://timeweb.cloud/api/v1/cloud-ai/agents/993cc710-5b8f-457d-b57d-94f9d3eeaaf2/embed.js?collapsed=false';
 
-type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football' | 'split-subscribe' | 'outfit-math' | 'gift-genius' | 'ai-mediator' | 'vibe' | 'movie-roulette' | 'evening-recipe';
+type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football' | 'vibe' | 'movie-roulette' | 'evening-recipe';
 
 const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -749,6 +745,7 @@ const App: React.FC = () => {
   // Обработка свайпа
   const handleSwipe = async (direction: 'left' | 'right') => {
     if (!room || !movies || movies.length === 0 || !movies[currentMovieIndex]) return;
+    if (loading) return;
 
     const movie = movies[currentMovieIndex];
     setLoading(true);
@@ -765,7 +762,7 @@ const App: React.FC = () => {
           room_id: rawMatch.room_id,
           movie_id: rawMatch.movie_id,
           created_at: rawMatch.created_at,
-          movie: rawMatch.movie ?? undefined,
+          movie: rawMatch.movie ?? movie,
           users: Array.isArray(rawMatch.users) ? rawMatch.users : undefined,
         };
         setMatchFromSwipe(true);
@@ -997,26 +994,6 @@ const App: React.FC = () => {
     return renderWithLayout(<FootballPage />);
   }
 
-  // Рендер Split & Subscribe
-  if (state === 'split-subscribe') {
-    return renderWithLayout(<SplitSubscribePage onBack={() => setState('room-selection')} />);
-  }
-
-  // Рендер OutfitMath
-  if (state === 'outfit-math') {
-    return renderWithLayout(<OutfitMathPage onBack={() => setState('room-selection')} />);
-  }
-
-  // Рендер GiftGenius
-  if (state === 'gift-genius') {
-    return renderWithLayout(<GiftGeniusPage onBack={() => setState('room-selection')} />);
-  }
-
-  // Рендер AI-Медиатор
-  if (state === 'ai-mediator') {
-    return renderWithLayout(<AIMediatorPage onBack={() => setState('room-selection')} />);
-  }
-
   // Рендер Свайп по Вайбу
   if (state === 'vibe') {
     return renderWithLayout(<VibePage onBack={() => setState('room-selection')} />);
@@ -1178,38 +1155,6 @@ const App: React.FC = () => {
           <div className="apps-hub-section">
             <h2 className="apps-hub-title">🚀 Другие приложения</h2>
             <div className="apps-hub-grid">
-              <div className="apps-hub-card" onClick={() => setState('split-subscribe')}>
-                <div className="apps-hub-card-icon" style={{ background: 'linear-gradient(135deg, #6c63ff, #a855f7)' }}>💳</div>
-                <div className="apps-hub-card-body">
-                  <strong>Split & Subscribe</strong>
-                  <p>Совместные подписки и расчёт долгов</p>
-                </div>
-                <span className="apps-hub-arrow">→</span>
-              </div>
-              <div className="apps-hub-card" onClick={() => setState('outfit-math')}>
-                <div className="apps-hub-card-icon" style={{ background: 'linear-gradient(135deg, #f093fb, #f5576c)' }}>👗</div>
-                <div className="apps-hub-card-body">
-                  <strong>OutfitMath</strong>
-                  <p>Умный гардероб и подбор образа по погоде</p>
-                </div>
-                <span className="apps-hub-arrow">→</span>
-              </div>
-              <div className="apps-hub-card" onClick={() => setState('gift-genius')}>
-                <div className="apps-hub-card-icon" style={{ background: 'linear-gradient(135deg, #f7971e, #ffd200)' }}>🎁</div>
-                <div className="apps-hub-card-body">
-                  <strong>GiftGenius</strong>
-                  <p>AI-подбор подарков по интересам друзей</p>
-                </div>
-                <span className="apps-hub-arrow">→</span>
-              </div>
-              <div className="apps-hub-card" onClick={() => setState('ai-mediator')}>
-                <div className="apps-hub-card-icon" style={{ background: 'linear-gradient(135deg, #0a0015, #a855f7)' }}>🤝</div>
-                <div className="apps-hub-card-body">
-                  <strong>AI-Медиатор</strong>
-                  <p>Найдём фильм-компромисс для двоих</p>
-                </div>
-                <span className="apps-hub-arrow">→</span>
-              </div>
               <div className="apps-hub-card" onClick={() => setState('vibe')}>
                 <div className="apps-hub-card-icon" style={{ background: 'linear-gradient(135deg, #1a001e, #6d1a9c)' }}>✨</div>
                 <div className="apps-hub-card-body">
@@ -1631,16 +1576,18 @@ const App: React.FC = () => {
               <button
                 onClick={() => handleSwipe('left')}
                 disabled={loading}
-                className="swipe-button dislike-button"
+                className="swipe-circle dislike-circle"
+                aria-label="Не нравится"
               >
-                👎 Не нравится
+                ✕
               </button>
               <button
                 onClick={() => handleSwipe('right')}
                 disabled={loading}
-                className="swipe-button like-button"
+                className="swipe-circle like-circle"
+                aria-label="Нравится"
               >
-                👍 Нравится
+                ♥
               </button>
             </div>
           </>
