@@ -47,3 +47,12 @@ imdb_top_1000.csv
 .DS_Store
 Thumbs.db
 
+# Claude Code
+.claude/
+
+# Build artifacts (compiled binaries in root)
+/generate_comic_posters_free
+/generate_comic_posters
+/import_top100
+/import_csv
+
