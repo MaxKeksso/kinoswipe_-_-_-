@@ -20,12 +20,12 @@ func NewMovieRepository(db *sql.DB) *MovieRepository {
 
 func (r *MovieRepository) Create(movie *models.Movie) error {
 	query := `
-		INSERT INTO movies (id, title, title_en, poster_url, imdb_rating, kp_rating, genre, year, duration, description, trailer_url, streaming_url)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		INSERT INTO movies (id, title, title_en, poster_url, comic_poster_url, imdb_rating, kp_rating, genre, year, duration, description, trailer_url, streaming_url)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		RETURNING created_at, updated_at
 	`
 
-	var titleEn, description, trailerURL sql.NullString
+	var titleEn, description, trailerURL, comicPosterURL sql.NullString
 	var streamingURL []byte // JSONB
 
 	if movie.TitleEn != "" {
@@ -36,6 +36,9 @@ func (r *MovieRepository) Create(movie *models.Movie) error {
 	}
 	if movie.TrailerURL != "" {
 		trailerURL = sql.NullString{String: movie.TrailerURL, Valid: true}
+	}
+	if movie.ComicPosterURL != "" {
+		comicPosterURL = sql.NullString{String: movie.ComicPosterURL, Valid: true}
 	}
 	if len(movie.StreamingURL) > 0 {
 		data, _ := json.Marshal(movie.StreamingURL)
@@ -59,6 +62,7 @@ func (r *MovieRepository) Create(movie *models.Movie) error {
 		movie.Title,
 		titleEn,
 		movie.PosterURL,
+		comicPosterURL,
 		movie.IMDbRating,
 		movie.KPRating,
 		genre,
@@ -79,15 +83,15 @@ func (r *MovieRepository) Create(movie *models.Movie) error {
 func (r *MovieRepository) GetByID(id uuid.UUID) (*models.Movie, error) {
 	movie := &models.Movie{}
 	query := `
-		SELECT id, title, title_en, poster_url, imdb_rating, kp_rating, genre, year, duration, description, trailer_url, streaming_url, created_at, updated_at
+		SELECT id, title, title_en, poster_url, comic_poster_url, imdb_rating, kp_rating, genre, year, duration, description, trailer_url, streaming_url, created_at, updated_at
 		FROM movies WHERE id = $1
 	`
 
-	var titleEn, description, trailerURL, streamingURL sql.NullString
+	var titleEn, description, trailerURL, streamingURL, comicPosterURL sql.NullString
 	var genre []byte
 
 	err := r.db.QueryRow(query, id).Scan(
-		&movie.ID, &movie.Title, &titleEn, &movie.PosterURL,
+		&movie.ID, &movie.Title, &titleEn, &movie.PosterURL, &comicPosterURL,
 		&movie.IMDbRating, &movie.KPRating, &genre, &movie.Year,
 		&movie.Duration, &description, &trailerURL, &streamingURL,
 		&movie.CreatedAt, &movie.UpdatedAt,
@@ -109,11 +113,13 @@ func (r *MovieRepository) GetByID(id uuid.UUID) (*models.Movie, error) {
 	if trailerURL.Valid {
 		movie.TrailerURL = trailerURL.String
 	}
+	if comicPosterURL.Valid {
+		movie.ComicPosterURL = comicPosterURL.String
+	}
 	if streamingURL.Valid {
 		_ = json.Unmarshal([]byte(streamingURL.String), &movie.StreamingURL)
 	}
 	if len(genre) > 0 {
-		// Genre хранится как JSON строка в БД, просто конвертируем в строку
 		movie.Genre = string(genre)
 	}
 
@@ -125,12 +131,12 @@ func (r *MovieRepository) Update(movie *models.Movie) error {
 		UPDATE movies SET
 			title = $1, title_en = $2, poster_url = $3, imdb_rating = $4, kp_rating = $5,
 			genre = $6, year = $7, duration = $8, description = $9, trailer_url = $10,
-			streaming_url = $11, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $12
+			streaming_url = $11, comic_poster_url = $12, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $13
 		RETURNING updated_at
 	`
 
-	var titleEn, description, trailerURL sql.NullString
+	var titleEn, description, trailerURL, comicPosterURL sql.NullString
 	var streamingURL []byte
 	if movie.TitleEn != "" {
 		titleEn = sql.NullString{String: movie.TitleEn, Valid: true}
@@ -140,6 +146,9 @@ func (r *MovieRepository) Update(movie *models.Movie) error {
 	}
 	if movie.TrailerURL != "" {
 		trailerURL = sql.NullString{String: movie.TrailerURL, Valid: true}
+	}
+	if movie.ComicPosterURL != "" {
+		comicPosterURL = sql.NullString{String: movie.ComicPosterURL, Valid: true}
 	}
 	if movie.StreamingURL != "" {
 		streamingURL = []byte(movie.StreamingURL)
@@ -158,7 +167,7 @@ func (r *MovieRepository) Update(movie *models.Movie) error {
 	err := r.db.QueryRow(query,
 		movie.Title, titleEn, movie.PosterURL, movie.IMDbRating, movie.KPRating,
 		genre, movie.Year, movie.Duration, description, trailerURL, streamingURL,
-		movie.ID,
+		comicPosterURL, movie.ID,
 	).Scan(&movie.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to update movie: %w", err)
@@ -166,11 +175,19 @@ func (r *MovieRepository) Update(movie *models.Movie) error {
 	return nil
 }
 
+func (r *MovieRepository) UpdateComicPoster(id uuid.UUID, comicPosterURL string) error {
+	_, err := r.db.Exec(
+		`UPDATE movies SET comic_poster_url = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+		comicPosterURL, id,
+	)
+	return err
+}
+
 func (r *MovieRepository) GetAll(limit int) ([]models.Movie, error) {
 	query := `
-		SELECT id, title, title_en, poster_url, imdb_rating, kp_rating, genre, year, duration, description, trailer_url, streaming_url, created_at, updated_at
+		SELECT id, title, title_en, poster_url, comic_poster_url, imdb_rating, kp_rating, genre, year, duration, description, trailer_url, streaming_url, created_at, updated_at
 		FROM movies
-		ORDER BY created_at DESC
+		ORDER BY imdb_rating DESC NULLS LAST, created_at DESC
 		LIMIT $1
 	`
 
@@ -183,11 +200,11 @@ func (r *MovieRepository) GetAll(limit int) ([]models.Movie, error) {
 	var movies []models.Movie
 	for rows.Next() {
 		movie := models.Movie{}
-		var titleEn, description, trailerURL, streamingURL sql.NullString
+		var titleEn, description, trailerURL, streamingURL, comicPosterURL sql.NullString
 		var genre []byte
 
 		err := rows.Scan(
-			&movie.ID, &movie.Title, &titleEn, &movie.PosterURL,
+			&movie.ID, &movie.Title, &titleEn, &movie.PosterURL, &comicPosterURL,
 			&movie.IMDbRating, &movie.KPRating, &genre, &movie.Year,
 			&movie.Duration, &description, &trailerURL, &streamingURL,
 			&movie.CreatedAt, &movie.UpdatedAt,
@@ -205,11 +222,13 @@ func (r *MovieRepository) GetAll(limit int) ([]models.Movie, error) {
 		if trailerURL.Valid {
 			movie.TrailerURL = trailerURL.String
 		}
+		if comicPosterURL.Valid {
+			movie.ComicPosterURL = comicPosterURL.String
+		}
 		if streamingURL.Valid {
 			_ = json.Unmarshal([]byte(streamingURL.String), &movie.StreamingURL)
 		}
 		if len(genre) > 0 {
-			// Genre хранится как JSON строка в БД, просто конвертируем в строку
 			movie.Genre = string(genre)
 		}
 
@@ -221,7 +240,7 @@ func (r *MovieRepository) GetAll(limit int) ([]models.Movie, error) {
 
 func (r *MovieRepository) GetNotSwipedByUser(roomID, userID uuid.UUID, limit int) ([]models.Movie, error) {
 	query := `
-		SELECT m.id, m.title, m.title_en, m.poster_url, m.imdb_rating, m.kp_rating, m.genre, m.year, m.duration, m.description, m.trailer_url, m.streaming_url, m.created_at, m.updated_at
+		SELECT m.id, m.title, m.title_en, m.poster_url, m.comic_poster_url, m.imdb_rating, m.kp_rating, m.genre, m.year, m.duration, m.description, m.trailer_url, m.streaming_url, m.created_at, m.updated_at
 		FROM movies m
 		WHERE NOT EXISTS (
 			SELECT 1 FROM swipes s
@@ -229,7 +248,7 @@ func (r *MovieRepository) GetNotSwipedByUser(roomID, userID uuid.UUID, limit int
 			AND s.room_id = $1
 			AND s.user_id = $2
 		)
-		ORDER BY m.created_at DESC
+		ORDER BY m.imdb_rating DESC NULLS LAST, m.created_at DESC
 		LIMIT $3
 	`
 
@@ -242,11 +261,11 @@ func (r *MovieRepository) GetNotSwipedByUser(roomID, userID uuid.UUID, limit int
 	var movies []models.Movie
 	for rows.Next() {
 		movie := models.Movie{}
-		var titleEn, description, trailerURL, streamingURL sql.NullString
+		var titleEn, description, trailerURL, streamingURL, comicPosterURL sql.NullString
 		var genre []byte
 
 		err := rows.Scan(
-			&movie.ID, &movie.Title, &titleEn, &movie.PosterURL,
+			&movie.ID, &movie.Title, &titleEn, &movie.PosterURL, &comicPosterURL,
 			&movie.IMDbRating, &movie.KPRating, &genre, &movie.Year,
 			&movie.Duration, &description, &trailerURL, &streamingURL,
 			&movie.CreatedAt, &movie.UpdatedAt,
@@ -264,11 +283,13 @@ func (r *MovieRepository) GetNotSwipedByUser(roomID, userID uuid.UUID, limit int
 		if trailerURL.Valid {
 			movie.TrailerURL = trailerURL.String
 		}
+		if comicPosterURL.Valid {
+			movie.ComicPosterURL = comicPosterURL.String
+		}
 		if streamingURL.Valid {
 			_ = json.Unmarshal([]byte(streamingURL.String), &movie.StreamingURL)
 		}
 		if len(genre) > 0 {
-			// Genre хранится как JSON строка в БД, просто конвертируем в строку
 			movie.Genre = string(genre)
 		}
 

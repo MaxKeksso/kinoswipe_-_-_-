@@ -1,0 +1,1 @@
+ALTER TABLE movies ADD COLUMN IF NOT EXISTS comic_poster_url TEXT;

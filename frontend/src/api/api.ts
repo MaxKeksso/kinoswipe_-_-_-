@@ -154,6 +154,7 @@ export interface Movie {
   title: string;
   title_en?: string;
   poster_url: string;
+  comic_poster_url?: string;
   imdb_rating?: number;
   kp_rating?: number;
   genre: string;
