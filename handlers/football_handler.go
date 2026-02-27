@@ -117,6 +117,18 @@ func (h *FootballHandler) GetStandings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetCLBracketV2 возвращает агрегированную сетку плей-офф ЛЧ в формате v2 (matchup + суммарный счёт)
+func (h *FootballHandler) GetCLBracketV2(w http.ResponseWriter, r *http.Request) {
+	bracket, err := h.footballService.BuildCLBracketV2()
+	if err != nil {
+		log.Printf("Error building CL bracket v2: %v", err)
+		http.Error(w, "Failed to build CL bracket v2", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(bracket)
+}
+
 // GetCLBracket возвращает сетку плей-офф Лиги Чемпионов
 func (h *FootballHandler) GetCLBracket(w http.ResponseWriter, r *http.Request) {
 	bracket, err := h.footballService.GetCLBracket()

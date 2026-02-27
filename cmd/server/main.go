@@ -79,6 +79,7 @@ func main() {
 
 	// API routes
 	api := router.PathPrefix("/api/v1").Subrouter()
+	apiV2 := router.PathPrefix("/api/v2").Subrouter()
 
 	// Rate limiting по IP (если включено в конфиге)
 	if cfg.Server.RateLimitRPM > 0 {
@@ -160,6 +161,9 @@ func main() {
 	api.HandleFunc("/football/standings", footballHandler.GetStandings).Methods("GET")
 	api.HandleFunc("/football/cl/bracket", footballHandler.GetCLBracket).Methods("GET")
 	api.HandleFunc("/football/refresh", footballHandler.RefreshMatches).Methods("POST")
+
+	// Experimental v2 routes (песочница для турнирной сетки)
+	apiV2.HandleFunc("/bracket-test", footballHandler.GetCLBracketV2).Methods("GET")
 
 	// Feedback routes
 	api.HandleFunc("/feedbacks", feedbackHandler.CreateFeedback).Methods("POST")
