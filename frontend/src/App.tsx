@@ -12,6 +12,7 @@ import { FootballPage } from './components/FootballPage';
 import VibePage from './components/VibePage';
 import MovieRoulettePage from './components/MovieRoulettePage';
 import EveningRecipePage from './components/EveningRecipePage';
+import SpaceShooterGame from './components/SpaceShooterGame';
 import { apiService, authStorage, setApiErrorHandler, User, Room, Movie, Match, Premiere } from './api/api';
 import { getMovieDisplayTitle } from './utils/movieRussian';
 import { useWebSocket } from './hooks/useWebSocket';
@@ -23,7 +24,7 @@ const TIMEWEB_WIDGET_SRC =
   process.env.REACT_APP_TIMEWEB_WIDGET_SRC ||
   'https://timeweb.cloud/api/v1/cloud-ai/agents/993cc710-5b8f-457d-b57d-94f9d3eeaaf2/embed.js?collapsed=false';
 
-type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football' | 'vibe' | 'movie-roulette' | 'evening-recipe';
+type AppState = 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting' | 'swiping' | 'match' | 'admin' | 'match-links' | 'football' | 'vibe' | 'movie-roulette' | 'evening-recipe' | 'game';
 
 const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -829,6 +830,11 @@ const App: React.FC = () => {
   // Рендер Рецепт Вечера
   if (state === 'evening-recipe') {
     return renderWithLayout(<EveningRecipePage onBack={() => setState('room-selection')} />);
+  }
+
+  // Рендер Космический Защитник
+  if (state === 'game') {
+    return renderWithLayout(<SpaceShooterGame onBack={() => setState('room-selection')} />);
   }
 
   // Рендер экрана авторизации

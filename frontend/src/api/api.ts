@@ -494,6 +494,25 @@ export const apiService = {
     const response = await api.post<{ status: string; message: string }>('/football/refresh');
     return response.data;
   },
+
+  // Игровые рекорды (Space Shooter)
+  submitGameScore: async (data: {
+    player_name: string;
+    score: number;
+    wave: number;
+    enemies_killed: { scout: number; cruiser: number; boss: number };
+  }): Promise<unknown> => {
+    const response = await api.post('/game/scores', data);
+    return response.data;
+  },
+
+  getGameLeaderboard: async (): Promise<{
+    ID: string; PlayerName: string; Score: number; Wave: number;
+    EnemiesKilled: string; CreatedAt: string;
+  }[]> => {
+    const response = await api.get('/game/leaderboard');
+    return Array.isArray(response.data) ? response.data : [];
+  },
 };
 
 export default api;

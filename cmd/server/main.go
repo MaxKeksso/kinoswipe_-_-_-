@@ -67,6 +67,8 @@ func main() {
 	premiereHandler := handlers.NewPremiereHandler(premiereRepo)
 	matchLinkHandler := handlers.NewMatchLinkHandler(matchLinkRepo)
 	footballHandler := handlers.NewFootballHandler(footballService)
+	gameScoreRepo := repository.NewGameScoreRepository(db.DB)
+	gameHandler := handlers.NewGameHandler(gameScoreRepo)
 
 	// Настройка роутера
 	router := mux.NewRouter()
@@ -164,6 +166,10 @@ func main() {
 
 	// Experimental v2 routes (песочница для турнирной сетки)
 	apiV2.HandleFunc("/bracket-test", footballHandler.GetCLBracketV2).Methods("GET")
+
+	// Game routes
+	api.HandleFunc("/game/scores", gameHandler.SubmitScore).Methods("POST")
+	api.HandleFunc("/game/leaderboard", gameHandler.GetLeaderboard).Methods("GET")
 
 	// Feedback routes
 	api.HandleFunc("/feedbacks", feedbackHandler.CreateFeedback).Methods("POST")

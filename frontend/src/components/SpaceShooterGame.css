@@ -1,0 +1,475 @@
+/* ================================================
+   SpaceShooterGame — стили космической аркады
+   ================================================ */
+
+.shooter-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background: #050814;
+  padding: 16px 16px 24px;
+  gap: 12px;
+}
+
+/* ---- Шапка ---- */
+.shooter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 520px;
+}
+
+.shooter-title {
+  color: #00ffff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0;
+  text-shadow: 0 0 12px #00ffff88;
+  letter-spacing: 0.5px;
+}
+
+.shooter-back-btn,
+.shooter-lb-btn {
+  background: rgba(0, 255, 255, 0.08);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  color: #00cccc;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.shooter-back-btn:hover,
+.shooter-lb-btn:hover {
+  background: rgba(0, 255, 255, 0.18);
+  border-color: #00ffff;
+  color: #00ffff;
+}
+
+/* ---- Canvas ---- */
+.shooter-canvas-wrap {
+  position: relative;
+  width: 480px;
+  max-width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(0, 200, 255, 0.2), 0 0 80px rgba(0, 100, 200, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.15);
+}
+
+.shooter-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #050814;
+  image-rendering: crisp-edges;
+}
+
+/* ---- Оверлей ---- */
+.shooter-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 8, 20, 0.88);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+}
+
+/* ---- Главное меню ---- */
+.shooter-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 340px;
+}
+
+.shooter-menu-icon {
+  font-size: 52px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+.shooter-menu-title {
+  color: #00ffff;
+  font-size: 1.9rem;
+  font-weight: 900;
+  margin: 0;
+  line-height: 1.2;
+  text-shadow: 0 0 20px #00ffff88;
+  letter-spacing: 1px;
+}
+
+.shooter-menu-sub {
+  color: #8899bb;
+  font-size: 0.88rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.shooter-menu-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #556688;
+  font-size: 0.78rem;
+  background: rgba(0, 100, 200, 0.08);
+  border: 1px solid rgba(0, 100, 200, 0.2);
+  border-radius: 8px;
+  padding: 10px 16px;
+}
+
+/* ---- Кнопки ---- */
+.shooter-btn {
+  width: 100%;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.shooter-btn--primary {
+  background: linear-gradient(135deg, #0088cc, #00ccff);
+  color: #ffffff;
+  border-color: #00aaff;
+  box-shadow: 0 0 20px rgba(0, 170, 255, 0.3);
+}
+
+.shooter-btn--primary:hover:not(:disabled) {
+  box-shadow: 0 0 30px rgba(0, 200, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.shooter-btn--primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.shooter-btn--secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #8899bb;
+  border-color: rgba(100, 150, 200, 0.3);
+}
+
+.shooter-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #aabbcc;
+  border-color: rgba(100, 150, 200, 0.6);
+}
+
+/* ---- Wave Clear ---- */
+.shooter-wave-clear {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 32px 24px;
+}
+
+.shooter-wave-icon {
+  font-size: 48px;
+}
+
+.shooter-wave-clear h2 {
+  color: #00ffaa;
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0;
+  text-shadow: 0 0 16px #00ffaa88;
+}
+
+.shooter-wave-score {
+  color: #ffdd00;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.shooter-wave-next {
+  color: #8899bb;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.shooter-wave-countdown {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: #00ffff;
+  text-shadow: 0 0 24px #00ffff;
+  animation: pulse-scale 1s ease-in-out infinite;
+}
+
+@keyframes pulse-scale {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.15); }
+}
+
+/* ---- Комбо текст ---- */
+.shooter-combo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ffdd00;
+  font-size: 1.5rem;
+  font-weight: 900;
+  text-shadow: 0 0 20px #ffdd00;
+  pointer-events: none;
+  z-index: 20;
+  animation: combo-pop 1s ease-out forwards;
+}
+
+@keyframes combo-pop {
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+  30%  { opacity: 1; transform: translate(-50%, -60%) scale(1.2); }
+  100% { opacity: 0; transform: translate(-50%, -80%) scale(1); }
+}
+
+/* ---- Game Over ---- */
+.shooter-gameover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 24px;
+  max-width: 340px;
+  width: 100%;
+}
+
+.shooter-gameover-icon {
+  font-size: 44px;
+}
+
+.shooter-gameover-title {
+  color: #ff4444;
+  font-size: 2rem;
+  font-weight: 900;
+  margin: 0;
+  text-shadow: 0 0 20px #ff444488;
+  letter-spacing: 3px;
+}
+
+.shooter-gameover-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.shooter-stat {
+  background: rgba(0, 50, 100, 0.3);
+  border: 1px solid rgba(0, 100, 200, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shooter-stat:first-child {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
+.shooter-stat-label {
+  color: #556688;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.shooter-stat-value {
+  color: #00ffff;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.shooter-stat:first-child .shooter-stat-value {
+  font-size: 1.6rem;
+  color: #ffdd00;
+  text-shadow: 0 0 10px #ffdd0066;
+}
+
+.shooter-name-row {
+  width: 100%;
+}
+
+.shooter-name-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(0, 50, 100, 0.4);
+  border: 1px solid rgba(0, 150, 255, 0.4);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  text-align: center;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.shooter-name-input::placeholder {
+  color: #445566;
+}
+
+.shooter-name-input:focus {
+  border-color: #00aaff;
+  box-shadow: 0 0 12px rgba(0, 170, 255, 0.2);
+}
+
+.shooter-gameover-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/* ---- Leaderboard ---- */
+.shooter-leaderboard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 360px;
+  max-height: 90%;
+  overflow-y: auto;
+}
+
+.shooter-lb-title {
+  color: #ffdd00;
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0;
+  text-shadow: 0 0 14px #ffdd0066;
+}
+
+.shooter-lb-loading,
+.shooter-lb-empty {
+  color: #556688;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.shooter-lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.shooter-lb-table th {
+  color: #556688;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(0, 100, 200, 0.2);
+}
+
+.shooter-lb-table td {
+  color: #aabbcc;
+  padding: 7px 8px;
+  border-bottom: 1px solid rgba(0, 50, 100, 0.2);
+  text-align: center;
+}
+
+.shooter-lb-table tr:last-child td {
+  border-bottom: none;
+}
+
+.shooter-lb-first td {
+  color: #ffdd00;
+  font-weight: 700;
+}
+
+.shooter-lb-score {
+  color: #00ffff !important;
+  font-weight: 700;
+}
+
+.shooter-lb-btns {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.shooter-lb-btns .shooter-btn {
+  flex: 1;
+}
+
+/* ---- Мобильное управление ---- */
+.shooter-mobile-controls {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.shooter-mobile-row {
+  display: flex;
+  gap: 12px;
+}
+
+.shooter-mobile-btn {
+  width: 56px;
+  height: 56px;
+  background: rgba(0, 100, 200, 0.2);
+  border: 1px solid rgba(0, 150, 255, 0.4);
+  border-radius: 12px;
+  color: #00ccff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  transition: background 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shooter-mobile-btn:active {
+  background: rgba(0, 150, 255, 0.4);
+}
+
+@media (max-width: 520px) {
+  .shooter-page {
+    padding: 10px 8px 16px;
+  }
+
+  .shooter-mobile-controls {
+    display: flex;
+  }
+
+  .shooter-title {
+    font-size: 0.9rem;
+  }
+
+  .shooter-canvas-wrap {
+    border-radius: 8px;
+  }
+}
+
+@media (pointer: coarse) {
+  .shooter-mobile-controls {
+    display: flex;
+  }
+}
