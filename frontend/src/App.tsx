@@ -1357,7 +1357,7 @@ const App: React.FC = () => {
               {movies[currentMovieIndex + 2] && (
                 <div className="card card--behind-2" aria-hidden="true">
                   <img
-                    src={movies[currentMovieIndex + 2].poster_url}
+                    src={movies[currentMovieIndex + 2].comic_poster_url || movies[currentMovieIndex + 2].poster_url}
                     alt=""
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.visibility = 'hidden';
@@ -1369,7 +1369,7 @@ const App: React.FC = () => {
               {movies[currentMovieIndex + 1] && (
                 <div className="card card--behind-1" aria-hidden="true">
                   <img
-                    src={movies[currentMovieIndex + 1].poster_url}
+                    src={movies[currentMovieIndex + 1].comic_poster_url || movies[currentMovieIndex + 1].poster_url}
                     alt=""
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.visibility = 'hidden';
@@ -1391,11 +1391,13 @@ const App: React.FC = () => {
                   <div className="swipe-indicator like-indicator" ref={likeIndRef}>♥ ЛАЙК</div>
                   <div className="swipe-indicator dislike-indicator" ref={dislikeIndRef}>✕ НЕТ</div>
                   <img
-                    src={currentMovie.poster_url}
+                    src={currentMovie.comic_poster_url || currentMovie.poster_url}
                     alt={getMovieDisplayTitle(currentMovie)}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(getMovieDisplayTitle(currentMovie))}`;
+                      if (currentMovie.comic_poster_url && target.src === currentMovie.comic_poster_url) {
+                        target.src = currentMovie.poster_url;
+                      }
                     }}
                   />
                   <div className="card-info">

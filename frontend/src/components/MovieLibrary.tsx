@@ -113,12 +113,14 @@ export const MovieLibrary: React.FC<MovieLibraryProps> = ({ onClose, isAdmin = f
                   onClick={() => setSelectedMovie(movie)}
                 >
                   <img
-                    src={movie.poster_url}
+                    src={movie.comic_poster_url || movie.poster_url}
                   alt={getMovieDisplayTitle(movie)}
                   className="movie-library-poster"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = `https://via.placeholder.com/200x300?text=${encodeURIComponent(getMovieDisplayTitle(movie))}`;
+                    if (movie.comic_poster_url && target.src === movie.comic_poster_url) {
+                      target.src = movie.poster_url;
+                    }
                   }}
                 />
                 <div className="movie-library-info">
