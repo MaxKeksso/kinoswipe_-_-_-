@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { apiService, Movie } from '../api/api';
+import { getMovieDisplayTitle } from '../utils/movieRussian';
 
 interface VibeCard {
   id: string;
@@ -103,12 +105,54 @@ const VIBE_CARDS: VibeCard[] = [
   },
 ];
 
+// Maps each vibe card id to genre keywords (lowercase)
+const VIBE_GENRE_MAP: Record<string, string[]> = {
+  '1': ['drama', 'biography'],
+  '2': ['crime', 'thriller', 'mystery'],
+  '3': ['sci-fi', 'fantasy', 'adventure', 'science fiction'],
+  '4': ['comedy', 'romance', 'animation'],
+  '5': ['horror', 'thriller'],
+  '6': ['history', 'western', 'war'],
+  '7': ['mystery', 'crime'],
+  '8': ['action', 'war', 'adventure'],
+};
+
+function getGenresFromMovie(movie: Movie): string[] {
+  try {
+    const parsed: string[] = JSON.parse(movie.genre);
+    return parsed.map(g => g.toLowerCase());
+  } catch {
+    return [movie.genre.toLowerCase()];
+  }
+}
+
+function findMatchingMovie(vibeId: string, dbMovies: Movie[]): Movie | null {
+  const keywords = VIBE_GENRE_MAP[vibeId] || [];
+  if (keywords.length === 0 || dbMovies.length === 0) return null;
+  const matches = dbMovies.filter(movie => {
+    const movieGenres = getGenresFromMovie(movie);
+    return keywords.some(kw => movieGenres.some(mg => mg.includes(kw)));
+  });
+  if (matches.length === 0) return null;
+  // Sort by imdb_rating descending
+  matches.sort((a, b) => (b.imdb_rating || 0) - (a.imdb_rating || 0));
+  return matches[0];
+}
+
 const VibePage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [tab, setTab] = useState<'swipe' | 'result'>('swipe');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [liked, setLiked] = useState<VibeCard[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [skipped, setSkipped] = useState<VibeCard[]>([]);
   const [swipeDir, setSwipeDir] = useState<'left' | 'right' | null>(null);
+  const [dbMovies, setDbMovies] = useState<Movie[]>([]);
+
+  useEffect(() => {
+    apiService.getAllMovies()
+      .then(movies => setDbMovies(movies))
+      .catch(() => setDbMovies([]));
+  }, []);
 
   const current = VIBE_CARDS[currentIndex];
   const done = currentIndex >= VIBE_CARDS.length;
@@ -281,72 +325,104 @@ const VibePage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           ) : (
             <>
               {/* Best match */}
-              {bestMatch && (
-                <div style={{
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                  marginBottom: 20,
-                  boxShadow: '0 8px 40px rgba(168,85,247,0.3)',
-                }}>
+              {bestMatch && (() => {
+                const matchedMovie = findMatchingMovie(bestMatch.id, dbMovies);
+                return (
                   <div style={{
-                    background: bestMatch.gradient,
-                    padding: '28px 24px 20px',
+                    borderRadius: 20,
+                    overflow: 'hidden',
+                    marginBottom: 20,
+                    boxShadow: '0 8px 40px rgba(168,85,247,0.3)',
                   }}>
-                    <div style={{ fontSize: 48, marginBottom: 8 }}>{bestMatch.emoji}</div>
-                    <h3 style={{ margin: '0 0 4px', fontSize: 20 }}>{bestMatch.title}</h3>
-                    <p style={{ margin: 0, fontSize: 13, opacity: 0.8 }}>Ваш главный вайб вечера</p>
-                  </div>
-                  <div style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    padding: '16px 24px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}>
-                    <span style={{ fontSize: 28 }}>{bestMatch.filmEmoji}</span>
-                    <div>
-                      <strong style={{ display: 'block', fontSize: 15 }}>{bestMatch.film}</strong>
-                      <span style={{ fontSize: 12, opacity: 0.6 }}>{bestMatch.filmGenre}</span>
+                    <div style={{
+                      background: bestMatch.gradient,
+                      padding: '28px 24px 20px',
+                    }}>
+                      <div style={{ fontSize: 48, marginBottom: 8 }}>{bestMatch.emoji}</div>
+                      <h3 style={{ margin: '0 0 4px', fontSize: 20 }}>{bestMatch.title}</h3>
+                      <p style={{ margin: 0, fontSize: 13, opacity: 0.8 }}>Ваш главный вайб вечера</p>
                     </div>
                     <div style={{
-                      marginLeft: 'auto',
-                      padding: '6px 12px',
-                      background: 'linear-gradient(90deg,#a855f7,#06b6d4)',
-                      borderRadius: 20, fontSize: 12, fontWeight: 600,
-                    }}>🎬 Смотреть</div>
+                      background: 'rgba(255,255,255,0.08)',
+                      padding: '16px 24px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                    }}>
+                      {matchedMovie ? (
+                        <>
+                          {(matchedMovie.comic_poster_url || matchedMovie.poster_url) && (
+                            <img
+                              src={matchedMovie.comic_poster_url || matchedMovie.poster_url}
+                              alt={getMovieDisplayTitle(matchedMovie)}
+                              style={{ width: 60, height: 90, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
+                            />
+                          )}
+                          <div>
+                            <strong style={{ display: 'block', fontSize: 15 }}>{getMovieDisplayTitle(matchedMovie)}</strong>
+                            {matchedMovie.imdb_rating && (
+                              <span style={{ fontSize: 12, opacity: 0.6 }}>IMDb {matchedMovie.imdb_rating.toFixed(1)}</span>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{ fontSize: 28 }}>{bestMatch.filmEmoji}</span>
+                          <div>
+                            <strong style={{ display: 'block', fontSize: 15 }}>{bestMatch.film}</strong>
+                            <span style={{ fontSize: 12, opacity: 0.6 }}>{bestMatch.filmGenre}</span>
+                          </div>
+                        </>
+                      )}
+                      <div style={{
+                        marginLeft: 'auto',
+                        padding: '6px 12px',
+                        background: 'linear-gradient(90deg,#a855f7,#06b6d4)',
+                        borderRadius: 20, fontSize: 12, fontWeight: 600,
+                      }}>🎬 Смотреть</div>
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Liked vibes */}
               {liked.length > 1 && (
                 <>
                   <h3 style={{ margin: '0 0 12px', fontSize: 15, opacity: 0.7 }}>Все совпавшие вайбы:</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
-                    {liked.map(v => (
-                      <div key={v.id} style={{
-                        display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '12px 16px',
-                        background: 'rgba(255,255,255,0.05)',
-                        borderRadius: 12,
-                        border: '1px solid rgba(255,255,255,0.07)',
-                      }}>
-                        <span style={{ fontSize: 24 }}>{v.emoji}</span>
-                        <div style={{ flex: 1 }}>
-                          <strong style={{ fontSize: 14 }}>{v.title}</strong>
-                          <div style={{ fontSize: 12, opacity: 0.55 }}>{v.filmEmoji} {v.film}</div>
+                    {liked.map(v => {
+                      const vibeMovie = findMatchingMovie(v.id, dbMovies);
+                      return (
+                        <div key={v.id} style={{
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          padding: '12px 16px',
+                          background: 'rgba(255,255,255,0.05)',
+                          borderRadius: 12,
+                          border: '1px solid rgba(255,255,255,0.07)',
+                        }}>
+                          <span style={{ fontSize: 24 }}>{v.emoji}</span>
+                          <div style={{ flex: 1 }}>
+                            <strong style={{ fontSize: 14 }}>{v.title}</strong>
+                            <div style={{ fontSize: 12, opacity: 0.55 }}>
+                              {vibeMovie ? (
+                                <>{v.filmEmoji} {getMovieDisplayTitle(vibeMovie)}</>
+                              ) : (
+                                <>{v.filmEmoji} {v.film}</>
+                              )}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            {v.tags.slice(0, 2).map(t => (
+                              <span key={t} style={{
+                                padding: '2px 8px', borderRadius: 20,
+                                background: 'rgba(168,85,247,0.2)',
+                                fontSize: 11, color: '#c084fc',
+                              }}>{t}</span>
+                            ))}
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          {v.tags.slice(0, 2).map(t => (
-                            <span key={t} style={{
-                              padding: '2px 8px', borderRadius: 20,
-                              background: 'rgba(168,85,247,0.2)',
-                              fontSize: 11, color: '#c084fc',
-                            }}>{t}</span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </>
               )}

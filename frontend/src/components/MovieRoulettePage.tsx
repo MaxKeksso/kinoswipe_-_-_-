@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './MovieRoulettePage.css';
+import { apiService, Movie } from '../api/api';
+import { getMovieDisplayTitle } from '../utils/movieRussian';
 
 interface Player {
   id: string;
@@ -23,33 +25,90 @@ interface RouletteMovie {
   superLiked: boolean;
 }
 
-const MOVIE_POOL: RouletteMovie[] = [
-  { id: '1', title: 'Интерстеллар', emoji: '🚀', genre: 'Фантастика', year: 2014, duration: '2ч 49м', score: 0, banned: false, superLiked: false },
-  { id: '2', title: 'Джокер', emoji: '🃏', genre: 'Драма', year: 2019, duration: '2ч 2м', score: 0, banned: false, superLiked: false },
-  { id: '3', title: 'Паразиты', emoji: '🏠', genre: 'Триллер', year: 2019, duration: '2ч 12м', score: 0, banned: false, superLiked: false },
-  { id: '4', title: 'Матрица', emoji: '💊', genre: 'Боевик', year: 1999, duration: '2ч 16м', score: 0, banned: false, superLiked: false },
-  { id: '5', title: 'Начало', emoji: '🌀', genre: 'Триллер', year: 2010, duration: '2ч 28м', score: 0, banned: false, superLiked: false },
-  { id: '6', title: 'Бойцовский клуб', emoji: '👊', genre: 'Драма', year: 1999, duration: '2ч 19м', score: 0, banned: false, superLiked: false },
-  { id: '7', title: 'Форрест Гамп', emoji: '🏃', genre: 'Драма', year: 1994, duration: '2ч 22м', score: 0, banned: false, superLiked: false },
-  { id: '8', title: 'Зеленая миля', emoji: '🌿', genre: 'Драма', year: 1999, duration: '3ч 9м', score: 0, banned: false, superLiked: false },
-];
-
 const INITIAL_PLAYERS: Player[] = [
   { id: '1', name: 'Вы', avatar: '😎', vetos: 3, superLike: true, vetoed: [], superLiked: null },
   { id: '2', name: 'Андрей', avatar: '🧑', vetos: 3, superLike: true, vetoed: [], superLiked: null },
   { id: '3', name: 'Маша', avatar: '👩', vetos: 3, superLike: true, vetoed: [], superLiked: null },
 ];
 
+function genreToEmoji(genreJson: string): string {
+  try {
+    const genres: string[] = JSON.parse(genreJson);
+    const first = (genres[0] || '').toLowerCase();
+    if (first.includes('drama') || first.includes('драм')) return '🎭';
+    if (first.includes('crime') || first.includes('крими')) return '🔫';
+    if (first.includes('thriller') || first.includes('триллер')) return '😱';
+    if (first.includes('sci-fi') || first.includes('фантастик') || first.includes('science fiction')) return '🚀';
+    if (first.includes('fantasy') || first.includes('фэнтези')) return '⚔️';
+    if (first.includes('action') || first.includes('боевик')) return '💥';
+    if (first.includes('animation') || first.includes('анимаци')) return '🎨';
+    if (first.includes('comedy') || first.includes('комедия') || first.includes('комеди')) return '😂';
+    if (first.includes('romance') || first.includes('романтик')) return '💕';
+    if (first.includes('horror') || first.includes('ужас')) return '👻';
+    if (first.includes('war') || first.includes('военн')) return '🪖';
+    if (first.includes('history') || first.includes('истори')) return '📜';
+    if (first.includes('biography') || first.includes('биографи')) return '👤';
+    if (first.includes('mystery') || first.includes('детектив')) return '🔍';
+    if (first.includes('adventure') || first.includes('приключен')) return '🗺️';
+    if (first.includes('music') || first.includes('музык') || first.includes('мюзикл')) return '🎵';
+    return '🎬';
+  } catch {
+    return '🎬';
+  }
+}
+
+function movieToRoulette(movie: Movie): RouletteMovie {
+  let genres: string[] = [];
+  try {
+    genres = JSON.parse(movie.genre);
+  } catch {
+    genres = [movie.genre];
+  }
+  const firstGenre = genres[0] || '';
+  const hours = Math.floor(movie.duration / 60);
+  const mins = movie.duration % 60;
+  const duration = `${hours}ч ${mins}м`;
+  return {
+    id: movie.id,
+    title: getMovieDisplayTitle(movie),
+    emoji: genreToEmoji(movie.genre),
+    genre: firstGenre,
+    year: movie.year,
+    duration,
+    score: 0,
+    banned: false,
+    superLiked: false,
+  };
+}
+
 const MovieRoulettePage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [phase, setPhase] = useState<'lobby' | 'vote' | 'result'>('lobby');
   const [players, setPlayers] = useState<Player[]>(INITIAL_PLAYERS);
-  const [movies, setMovies] = useState<RouletteMovie[]>(MOVIE_POOL);
+  const [movies, setMovies] = useState<RouletteMovie[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activePlayer, setActivePlayer] = useState('1');
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState<RouletteMovie | null>(null);
   const [challenge, setChallenge] = useState(false);
   const [notification, setNotification] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
+
+  const loadMovies = async () => {
+    setLoading(true);
+    try {
+      const all = await apiService.getAllMovies();
+      const top20 = all.slice(0, 20).map(movieToRoulette);
+      setMovies(top20);
+    } catch {
+      setMovies([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMovies();
+  }, []);
 
   const pushNotif = (text: string) => {
     setNotification(text);
@@ -108,7 +167,6 @@ const MovieRoulettePage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       setWinner(picked);
       setSpinning(false);
       setPhase('result');
-      // Если у фильма низкий score — включаем "challenge"
       if (picked.score < 0) setChallenge(true);
     }, 2000);
   };
@@ -128,14 +186,31 @@ const MovieRoulettePage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setNewPlayerName('');
   };
 
-  const reset = () => {
+  const reset = async () => {
     setPhase('lobby');
     setPlayers(INITIAL_PLAYERS);
-    setMovies(MOVIE_POOL);
     setWinner(null);
     setChallenge(false);
     setActivePlayer('1');
+    await loadMovies();
   };
+
+  if (loading) {
+    return (
+      <div className="roulette-page">
+        <div className="roulette-header">
+          <button className="roulette-back-btn" onClick={onBack}>← Назад</button>
+          <div className="roulette-header-title">
+            <h1>🎰 Кино-Рулетка</h1>
+            <p>Социальная игра для выбора фильма</p>
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#fff', fontSize: 18 }}>
+          Загрузка фильмов...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="roulette-page">
