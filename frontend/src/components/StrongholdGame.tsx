@@ -506,6 +506,7 @@ const StrongholdGame: React.FC<Props> = ({ onBack }) => {
 
   // ── Render loop ───────────────────────────────────────────────────────────────
   const loop = useCallback((now: number) => {
+    rafRef.current = requestAnimationFrame(loop);
     const dt = Math.min(now - lastT.current, 50);
     lastT.current = now;
     const g = gs.current;
@@ -553,8 +554,6 @@ const StrongholdGame: React.FC<Props> = ({ onBack }) => {
 
     drawHUD(ctx, g);
     syncUI();
-
-    rafRef.current = requestAnimationFrame(loop);
   }, [syncUI]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
