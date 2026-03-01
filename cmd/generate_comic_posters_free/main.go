@@ -1,7 +1,6 @@
-// Генерация комикс-постеров через Pollinations.ai (БЕСПЛАТНО, без API ключей).
+// Генерация постеров в стиле тёмного кинематографичного нуара через Pollinations.ai (БЕСПЛАТНО).
 //
-// Скрипт строит URL Pollinations.ai с промптом в стиле комикса и сохраняет его
-// напрямую в поле comic_poster_url в таблице movies.
+// Строит URL Pollinations.ai с промптом multi-panel graphic novel и сохраняет в comic_poster_url.
 //
 // Использование:
 //
@@ -37,7 +36,7 @@ func main() {
 
 	repo := repository.NewMovieRepository(db.DB)
 
-	movies, err := repo.GetAll(200)
+	movies, err := repo.GetAll(300)
 	if err != nil {
 		log.Fatalf("GetAll: %v", err)
 	}
@@ -73,7 +72,6 @@ func main() {
 
 // buildPollinationsURL формирует URL Pollinations.ai с промптом и фиксированным seed
 func buildPollinationsURL(prompt, movieID string) string {
-	// Seed берём из первых 8 символов UUID для стабильности (одинаковый фильм = одна картинка)
 	seed := 0
 	for _, c := range movieID[:8] {
 		seed = seed*31 + int(c)
@@ -90,9 +88,8 @@ func buildPollinationsURL(prompt, movieID string) string {
 	)
 }
 
-// buildPrompt строит промпт в стиле комикса согласно инструкции
+// buildPrompt строит промпт в стиле тёмного кинематографичного мульти-панельного нуара
 func buildPrompt(title string, year int, genreJSON, description string) string {
-	// Парсим жанры
 	var genreList []string
 	_ = json.Unmarshal([]byte(genreJSON), &genreList)
 	genres := strings.Join(genreList, ", ")
@@ -100,57 +97,57 @@ func buildPrompt(title string, year int, genreJSON, description string) string {
 		genres = "Drama"
 	}
 
-	// Сокращаем описание до 150 символов
 	shortDesc := description
-	if len(shortDesc) > 150 {
-		shortDesc = shortDesc[:150]
+	if len(shortDesc) > 120 {
+		shortDesc = shortDesc[:120]
 	}
 
-	// Определяем хэштеги настроения по жанрам
-	vibes := moodTags(genreList)
+	atmosphere := moodAtmosphere(genreList)
 
 	return fmt.Sprintf(
-		`Comic book poster for film "%s" %d. Genre: %s. `+
-			`THREE SECTIONS layout: `+
-			`TOP (35%%): Big bold Russian manifesto quote 6-8 words about the film theme, white text with thick black outline on dark dramatic background, inspired by: %s. `+
-			`MIDDLE (35%%): Three iconic symbolic objects representing key film elements, vintage comic illustration style, thick black ink outlines, vivid red yellow blue colors, halftone Ben-Day dots background. `+
-			`BOTTOM (30%%): Three colorful comic starburst explosion shapes with bold Russian hashtag mood words: %s. `+
-			`STYLE: 1960s American comic book art, bold black outlines, high contrast, distressed aged paper texture, halftone dots, dramatic shadows, vertical poster 2:3 ratio, no photorealism.`,
-		title, year, genres,
-		shortDesc,
-		vibes,
+		`Dark cinematic multi-panel graphic novel movie poster for "%s" (%d). `+
+			`%s diagonal comic panels arranged dynamically showing 6 key dramatic scenes from the film. `+
+			`%s `+
+			`Center panel: mysterious title element or key symbol from the story. `+
+			`Art style: detailed painterly illustration, NOT cartoon, realistic facial portraits, `+
+			`dramatic chiaroscuro lighting, deep shadows with selective highlights, `+
+			`dark teal and charcoal color palette with intense orange and red fire/lightning accents, `+
+			`gritty cinematic texture, professional graphic novel cover art, `+
+			`thick black panel borders with diagonal cuts, atmospheric fog and rain, `+
+			`film noir aesthetic, intense emotional scenes, vertical portrait format 2:3.`,
+		title, year,
+		atmosphere,
+		genreMoodScene(shortDesc, genres),
 	)
 }
 
-// moodTags возвращает 3 русских хэштега настроения по жанру фильма
-func moodTags(genres []string) string {
+func moodAtmosphere(genres []string) string {
 	genreSet := map[string]bool{}
 	for _, g := range genres {
 		genreSet[strings.ToLower(strings.TrimSpace(g))] = true
 	}
 
-	tags := []string{}
-
-	if genreSet["drama"] || genreSet["biography"] {
-		tags = append(tags, "#судьба", "#страдание", "#надежда")
+	if genreSet["horror"] || genreSet["mystery"] {
+		return "Eerie horror atmosphere, dark fog, supernatural tension,"
 	} else if genreSet["crime"] || genreSet["thriller"] {
-		tags = append(tags, "#опасность", "#предательство", "#риск")
+		return "Noir crime thriller atmosphere, rain-soaked streets, shadowy figures,"
 	} else if genreSet["action"] || genreSet["adventure"] {
-		tags = append(tags, "#адреналин", "#борьба", "#победа")
-	} else if genreSet["comedy"] || genreSet["romance"] {
-		tags = append(tags, "#дружба", "#любовь", "#радость")
-	} else if genreSet["horror"] || genreSet["mystery"] {
-		tags = append(tags, "#страх", "#тайна", "#выживание")
-	} else if genreSet["sci-fi"] || genreSet["fantasy"] || genreSet["animation"] {
-		tags = append(tags, "#мечта", "#будущее", "#магия")
+		return "Epic action adventure atmosphere, explosive energy, dynamic combat,"
 	} else if genreSet["war"] || genreSet["history"] {
-		tags = append(tags, "#честь", "#жертва", "#память")
-	} else {
-		tags = []string{"#судьба", "#выбор", "#истина"}
+		return "Grim war epic atmosphere, battlefield smoke, heroic sacrifice,"
+	} else if genreSet["sci-fi"] || genreSet["fantasy"] {
+		return "Dark sci-fi atmosphere, dystopian landscapes, futuristic tension,"
+	} else if genreSet["biography"] || genreSet["drama"] {
+		return "Intense drama atmosphere, emotional confrontation, raw human tension,"
+	} else if genreSet["animation"] || genreSet["comedy"] {
+		return "Vibrant energetic atmosphere, bold character expressions, dynamic action,"
 	}
+	return "Intense cinematic atmosphere, dramatic tension, emotional depth,"
+}
 
-	if len(tags) > 3 {
-		tags = tags[:3]
+func genreMoodScene(desc, genres string) string {
+	if desc == "" {
+		return fmt.Sprintf("Scenes capture the essence of %s genre.", genres)
 	}
-	return strings.Join(tags, " ")
+	return fmt.Sprintf("Story essence: %s", desc)
 }
