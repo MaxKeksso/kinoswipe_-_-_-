@@ -56,17 +56,17 @@ func main() {
 	roomHandler := handlers.NewRoomHandler(roomRepo, filterRepo)
 	filterHandler := handlers.NewFilterHandler(filterRepo, roomRepo)
 	movieHandler := handlers.NewMovieHandler(movieRepo, roomRepo, filterRepo)
-	swipeHandler := handlers.NewSwipeHandler(swipeRepo, matchService)
+	// Инициализация WebSocket Hub (до handlers, т.к. SwipeHandler его использует)
+	wsHub := handlers.NewHub()
+	wsHub.SetAuth(userRepo, cfg)
+	go wsHub.Run()
+
+	swipeHandler := handlers.NewSwipeHandler(swipeRepo, matchService, wsHub)
 	matchHandler := handlers.NewMatchHandler(matchRepo, matchService)
 	feedbackHandler := handlers.NewFeedbackHandler(feedbackRepo)
 	premiereHandler := handlers.NewPremiereHandler(premiereRepo)
 	matchLinkHandler := handlers.NewMatchLinkHandler(matchLinkRepo)
 	footballHandler := handlers.NewFootballHandler(footballService)
-
-	// Инициализация WebSocket Hub (JWT по query token= опционально)
-	wsHub := handlers.NewHub()
-	wsHub.SetAuth(userRepo, cfg)
-	go wsHub.Run()
 
 	// Настройка роутера
 	router := mux.NewRouter()

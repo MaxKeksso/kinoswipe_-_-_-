@@ -66,10 +66,21 @@ export const useWebSocket = ({
           const data: WebSocketMessage = JSON.parse(raw);
           if (!data || typeof data !== 'object') return;
 
+          // Прямой формат от BroadcastMatch: { type: "match", match: {...} }
           if (data.type === 'match') {
             const match = (data as { match?: unknown }).match;
             if (match && typeof match === 'object' && (match as { id?: string }).id) {
               onMatch?.(match);
+            }
+          }
+          // Обёрнутый формат от broadcastToRoom: { type: "broadcast", payload: { type: "match", match: {...} } }
+          if (data.type === 'broadcast') {
+            const payload = (data as { payload?: unknown }).payload;
+            if (payload && typeof payload === 'object' && (payload as Record<string, unknown>)['type'] === 'match') {
+              const match = (payload as Record<string, unknown>)['match'];
+              if (match && typeof match === 'object' && (match as { id?: string }).id) {
+                onMatch?.(match);
+              }
             }
           }
 

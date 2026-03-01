@@ -174,13 +174,44 @@ func (h *Hub) broadcastToRoom(roomID uuid.UUID, message interface{}) {
 	}
 }
 
+// BroadcastMatch отправляет матч напрямую всем в комнате с type="match" на верхнем уровне.
+// Не оборачивает в broadcastToRoom чтобы фронтенд получал правильный формат.
 func (h *Hub) BroadcastMatch(roomID uuid.UUID, match *models.MatchWithDetails) {
-	msg := models.MatchNotification{
-		Type:      models.WSMessageTypeMatch,
-		Match:     *match,
-		Timestamp: time.Now(),
+	msg := map[string]interface{}{
+		"type":      models.WSMessageTypeMatch,
+		"match":     match,
+		"timestamp": time.Now().Unix(),
 	}
-	h.broadcastToRoom(roomID, msg)
+	data, err := json.Marshal(msg)
+	if err != nil {
+		log.Printf("Error marshaling match notification: %v", err)
+		return
+	}
+
+	h.mu.RLock()
+	clients, ok := h.rooms[roomID]
+	if !ok {
+		h.mu.RUnlock()
+		return
+	}
+	clientsCopy := make([]*Client, 0, len(clients))
+	for client := range clients {
+		clientsCopy = append(clientsCopy, client)
+	}
+	h.mu.RUnlock()
+
+	for _, client := range clientsCopy {
+		select {
+		case client.send <- data:
+		default:
+			h.mu.Lock()
+			if h.rooms[roomID] != nil {
+				delete(h.rooms[roomID], client)
+			}
+			h.mu.Unlock()
+			close(client.send)
+		}
+	}
 }
 
 func (c *Client) readPump() {

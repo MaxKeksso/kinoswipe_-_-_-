@@ -13,14 +13,16 @@ import (
 )
 
 type SwipeHandler struct {
-	swipeRepo   *repository.SwipeRepository
+	swipeRepo    *repository.SwipeRepository
 	matchService *service.MatchService
+	hub          *Hub
 }
 
-func NewSwipeHandler(swipeRepo *repository.SwipeRepository, matchService *service.MatchService) *SwipeHandler {
+func NewSwipeHandler(swipeRepo *repository.SwipeRepository, matchService *service.MatchService, hub *Hub) *SwipeHandler {
 	return &SwipeHandler{
-		swipeRepo:   swipeRepo,
+		swipeRepo:    swipeRepo,
 		matchService: matchService,
+		hub:          hub,
 	}
 }
 
@@ -71,20 +73,18 @@ func (h *SwipeHandler) CreateSwipe(w http.ResponseWriter, r *http.Request) {
 	// Если это лайк, проверяем возможность создания матча
 	if req.Direction == models.SwipeDirectionRight {
 		match, err := h.matchService.CheckAndCreateMatch(roomID, req.MovieID)
-		if err != nil {
-			// Логируем ошибку, но не прерываем ответ
-			// В production лучше использовать логгер
-		}
-
-		if match != nil {
-			// Возвращаем информацию о матче в ответе
-			matchDetails, err := h.matchService.GetMatchWithDetails(match.ID)
-			if err == nil {
-				response := map[string]interface{}{
+		if err == nil && match != nil {
+			matchDetails, detailsErr := h.matchService.GetMatchWithDetails(match.ID)
+			if detailsErr == nil && matchDetails != nil {
+				// Уведомляем всех участников комнаты через WebSocket
+				if h.hub != nil {
+					h.hub.BroadcastMatch(roomID, matchDetails)
+				}
+				// Возвращаем информацию о матче пользователю, сделавшему свайп
+				respondWithJSON(w, http.StatusOK, map[string]interface{}{
 					"swipe": swipe,
 					"match": matchDetails,
-				}
-				respondWithJSON(w, http.StatusOK, response)
+				})
 				return
 			}
 		}

@@ -75,7 +75,7 @@ export const MovieLibrary: React.FC<MovieLibraryProps> = ({ onClose, isAdmin = f
     <div className="movie-library-page">
       <div className="movie-library-content">
         <div className="library-header">
-          <h2>🎬 Библиотека фильмов</h2>
+          <h2>Библиотека фильмов</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
 
@@ -125,11 +125,11 @@ export const MovieLibrary: React.FC<MovieLibraryProps> = ({ onClose, isAdmin = f
                 />
                 <div className="movie-library-info">
                   <h4>{getMovieDisplayTitle(movie)}</h4>
-                    {movie.year && <p className="movie-year">📅 {movie.year}</p>}
-                    {movie.kp_rating && (
-                      <p className="movie-rating">⭐ {movie.kp_rating.toFixed(1)}</p>
-                    )}
-                  </div>
+                  {movie.year && <p className="movie-year">{movie.year}</p>}
+                  {movie.imdb_rating != null && (
+                    <p className="movie-rating">IMDb {Number(movie.imdb_rating).toFixed(1)}</p>
+                  )}
+                </div>
                 </div>
               ))}
             </div>

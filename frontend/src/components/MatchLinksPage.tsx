@@ -126,12 +126,14 @@ export const MatchLinksPage: React.FC<MatchLinksPageProps> = ({ match, onClose }
         {safeMovie && (
           <div className="match-movie-info">
             <img
-              src={safeMovie.poster_url || ''}
+              src={safeMovie.comic_poster_url || safeMovie.poster_url || ''}
               alt={getMovieDisplayTitle(safeMovie)}
               className="match-movie-poster"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(getMovieDisplayTitle(safeMovie))}`;
+                if (safeMovie.comic_poster_url && target.src === safeMovie.comic_poster_url) {
+                  target.src = safeMovie.poster_url || '';
+                }
               }}
             />
             <div className="movie-details">

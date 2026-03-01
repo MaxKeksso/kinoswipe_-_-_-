@@ -74,7 +74,8 @@ func (s *MatchService) CheckAndCreateMatch(roomID, movieID uuid.UUID) (*models.M
 	if err != nil {
 		return nil, fmt.Errorf("failed to get active members: %w", err)
 	}
-	if len(activeMemberIDs) == 0 {
+	// Матч возможен только если хотя бы 2 человека активны в комнате
+	if len(activeMemberIDs) < 2 {
 		return nil, nil
 	}
 
