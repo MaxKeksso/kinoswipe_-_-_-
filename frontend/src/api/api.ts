@@ -273,6 +273,35 @@ export interface FootballStandingsResponse {
   rpl?: FootballStanding[];
 }
 
+export interface BracketV2Team {
+  name: string;
+  isWinner: boolean;
+}
+
+export interface BracketV2Game {
+  id: number;
+  date: string;
+  time: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number;
+  awayScore: number;
+}
+
+export interface BracketV2Matchup {
+  matchupId: string;
+  stage: string;
+  position: number;
+  teams: BracketV2Team[];
+  games: BracketV2Game[];
+  totalScore: [number, number];
+}
+
+export interface BracketV2Stage {
+  stage: string;
+  matchups: BracketV2Matchup[];
+}
+
 // API методы
 export const apiService = {
   // Пользователи
@@ -453,6 +482,11 @@ export const apiService = {
 
   getChampionsLeagueBracket: async (): Promise<ChampionsLeagueBracket> => {
     const response = await api.get<ChampionsLeagueBracket>('/football/cl/bracket');
+    return response.data;
+  },
+
+  getClBracketV2: async (): Promise<BracketV2Stage[]> => {
+    const response = await axios.get<BracketV2Stage[]>('/api/v2/bracket-test');
     return response.data;
   },
 

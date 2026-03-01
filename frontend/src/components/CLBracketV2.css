@@ -1,0 +1,183 @@
+/* ============================================================
+   CLBracketV2 — SVG playoff bracket with connectors
+   ============================================================ */
+
+/* Horizontal scroll wrapper */
+.clv2-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 4px 2px 20px;
+  margin-top: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fixed-size canvas where everything is absolutely positioned */
+.clv2-wrap {
+  position: relative;
+}
+
+/* SVG connector lines */
+.clv2-svg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.clv2-lines line {
+  stroke: rgba(100, 140, 200, 0.35);
+  stroke-width: 1.5px;
+  stroke-linecap: round;
+}
+
+/* Stage column headers */
+.clv2-header {
+  position: absolute;
+  top: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #94a3b8);
+}
+
+/* ── Matchup card ── */
+.clv2-card {
+  position: absolute;
+  border-radius: 8px;
+  overflow: visible;          /* allow expanded detail to spill */
+  border: 1px solid var(--border, rgba(148,163,184,0.2));
+  background: var(--bg-elevated, #1e293b);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  z-index: 1;
+}
+
+.clv2-card--played {
+  cursor: pointer;
+}
+
+.clv2-card--played:hover {
+  border-color: rgba(148, 163, 184, 0.45);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  z-index: 2;
+}
+
+/* Final card gets a gold accent */
+.clv2-card--final {
+  border-color: rgba(251, 191, 36, 0.35);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.08);
+}
+
+.clv2-card--final:hover {
+  border-color: rgba(251, 191, 36, 0.6);
+}
+
+/* ── Team row ── */
+.clv2-team {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  height: 31px;
+  gap: 8px;
+  transition: background 0.1s;
+}
+
+.clv2-team:first-child {
+  border-bottom: 1px solid var(--border, rgba(148,163,184,0.15));
+  border-radius: 8px 8px 0 0;
+}
+
+.clv2-team:last-of-type {
+  border-radius: 0 0 8px 8px;
+}
+
+/* Winner highlight */
+.clv2-team--winner {
+  background: rgba(16, 185, 129, 0.09);
+}
+
+.clv2-team-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  color: var(--text, #e2e8f0);
+  line-height: 1.2;
+}
+
+.clv2-team--winner .clv2-team-name {
+  font-weight: 700;
+}
+
+.clv2-team--loser .clv2-team-name {
+  opacity: 0.42;
+}
+
+/* Score badge */
+.clv2-score {
+  flex-shrink: 0;
+  min-width: 18px;
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.clv2-score--win {
+  color: #fbbf24;          /* gold for winning score */
+}
+
+/* ── Expanded game detail ── */
+.clv2-detail {
+  position: absolute;
+  top: calc(100% + 4px);  /* appear just below the card */
+  left: -1px;
+  right: -1px;
+  background: var(--bg-elevated, #1e293b);
+  border: 1px solid var(--border, rgba(148,163,184,0.25));
+  border-radius: 0 0 8px 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.clv2-game {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.clv2-game-date {
+  font-size: 0.66rem;
+  color: var(--text-secondary, #64748b);
+  letter-spacing: 0.02em;
+}
+
+.clv2-game-line {
+  font-size: 0.75rem;
+  color: var(--text, #e2e8f0);
+  line-height: 1.4;
+}
+
+.clv2-game-line strong {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ── Mobile: horizontal scroll ── */
+@media (max-width: 700px) {
+  .clv2-scroll {
+    padding: 4px 0 20px;
+    margin: 0 -16px 0;          /* bleed to screen edges */
+    padding-left: 16px;
+  }
+}

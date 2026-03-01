@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './FootballPage.css';
-import { apiService, FootballMatch, FootballStanding, ChampionsLeagueBracket } from '../api/api';
+import { apiService, FootballMatch, FootballStanding, ChampionsLeagueBracket, BracketV2Stage } from '../api/api';
+import { CLBracketV2 } from './CLBracketV2';
 
 type Tab = 'matches' | 'standings-cl' | 'standings-rpl';
 
@@ -95,6 +96,8 @@ export const FootballPage: React.FC = () => {
   const [clBracket, setClBracket] = useState<ChampionsLeagueBracket | null>(null);
   const [bracketLoading, setBracketLoading] = useState(false);
   const [bracketError, setBracketError] = useState<string | null>(null);
+  const [clBracketV2, setClBracketV2] = useState<BracketV2Stage[] | null>(null);
+  const [bracketV2Loading, setBracketV2Loading] = useState(false);
 
   const loadMatches = useCallback(async () => {
     try {
@@ -138,6 +141,19 @@ export const FootballPage: React.FC = () => {
     }
   }, [clBracket]);
 
+  const loadClBracketV2 = useCallback(async () => {
+    if (clBracketV2) return;
+    try {
+      setBracketV2Loading(true);
+      const data = await apiService.getClBracketV2();
+      setClBracketV2(Array.isArray(data) ? data : []);
+    } catch {
+      setClBracketV2([]);
+    } finally {
+      setBracketV2Loading(false);
+    }
+  }, [clBracketV2]);
+
   useEffect(() => {
     loadMatches();
     const interval = setInterval(loadMatches, 5 * 60 * 1000);
@@ -151,8 +167,9 @@ export const FootballPage: React.FC = () => {
     }
     if (activeTab === 'standings-cl') {
       loadClBracket();
+      loadClBracketV2();
     }
-  }, [activeTab, loadStandings, loadClBracket]);
+  }, [activeTab, loadStandings, loadClBracket, loadClBracketV2]);
 
   const formatDate = (dateString: string) => {
     const [year, month, day] = dateString.split('-').map(Number);
@@ -286,27 +303,12 @@ export const FootballPage: React.FC = () => {
 
                 <div className="cl-bracket-section">
                   <h3>Сетка плей-офф Лиги чемпионов</h3>
-                  {bracketLoading && <div className="matches-loading">Загрузка сетки...</div>}
-                  {bracketError && <div className="matches-error">{bracketError}</div>}
-                  {!bracketLoading && !bracketError && clBracket && (
-                    <div className="cl-bracket">
-                      <div className="cl-bracket-column">
-                        <h4>1/8 финала</h4>
-                        {clBracket.roundOf16.map(renderMatch)}
-                      </div>
-                      <div className="cl-bracket-column">
-                        <h4>1/4 финала</h4>
-                        {clBracket.quarterFinals.map(renderMatch)}
-                      </div>
-                      <div className="cl-bracket-column">
-                        <h4>1/2 финала</h4>
-                        {clBracket.semiFinals.map(renderMatch)}
-                      </div>
-                      <div className="cl-bracket-column">
-                        <h4>Финал</h4>
-                        {clBracket.final.map(renderMatch)}
-                      </div>
-                    </div>
+                  {bracketV2Loading && <div className="matches-loading">Загрузка сетки...</div>}
+                  {!bracketV2Loading && clBracketV2 && clBracketV2.length > 0 && (
+                    <CLBracketV2 stages={clBracketV2} />
+                  )}
+                  {!bracketV2Loading && clBracketV2 && clBracketV2.length === 0 && (
+                    <div className="matches-loading">Сетка недоступна</div>
                   )}
                 </div>
               </>

@@ -43,11 +43,12 @@ type BracketV2Stage struct {
 }
 
 // BuildCLBracketV2 строит агрегированную сетку плей-офф ЛЧ из football-data.org.
-// Это изолированный прототип (используется в /api/v2/bracket-test).
+// При недоступности API падает обратно на статический CLBracket (v1 fallback).
 func (s *FootballService) BuildCLBracketV2() ([]BracketV2Stage, error) {
 	raw, err := s.fetchCLKnockoutMatches()
 	if err != nil {
-		return nil, err
+		// Fallback: конвертируем v1 статическую сетку в v2 формат
+		return convertCLBracketToV2(s.getCLStaticBracket()), nil
 	}
 
 	// Группируем матчи по ключу: stage + упорядоченная пара команд
@@ -236,5 +237,64 @@ func normalizeStage(s string) string {
 	default:
 		return ""
 	}
+}
+
+// convertCLBracketToV2 конвертирует CLBracket (v1 формат) в []BracketV2Stage.
+// Используется как fallback когда football-data.org API недоступен.
+func convertCLBracketToV2(b *CLBracket) []BracketV2Stage {
+	type stageEntry struct {
+		name    string
+		matches []FootballMatch
+	}
+	entries := []stageEntry{
+		{"LAST_16", b.RoundOf16},
+		{"QUARTER_FINALS", b.QuarterFinals},
+		{"SEMI_FINALS", b.SemiFinals},
+		{"FINAL", b.Final},
+	}
+
+	result := make([]BracketV2Stage, 0, 4)
+	for _, e := range entries {
+		if len(e.matches) == 0 {
+			continue
+		}
+		matchups := make([]BracketV2Matchup, 0, len(e.matches))
+		for i, m := range e.matches {
+			homeGoals, awayGoals := 0, 0
+			games := make([]BracketV2Game, 0)
+			if m.Status == "finished" {
+				if m.HomeScore != nil {
+					homeGoals = *m.HomeScore
+				}
+				if m.AwayScore != nil {
+					awayGoals = *m.AwayScore
+				}
+				games = append(games, BracketV2Game{
+					ID:        i,
+					Date:      m.Date,
+					Time:      m.Time,
+					HomeTeam:  m.HomeTeam,
+					AwayTeam:  m.AwayTeam,
+					HomeScore: homeGoals,
+					AwayScore: awayGoals,
+				})
+			}
+			winner0 := m.Status == "finished" && homeGoals > awayGoals
+			winner1 := m.Status == "finished" && awayGoals > homeGoals
+			matchups = append(matchups, BracketV2Matchup{
+				MatchupID: fmt.Sprintf("%s-%d", e.name, i),
+				Stage:     e.name,
+				Position:  i,
+				Teams: []BracketV2Team{
+					{Name: m.HomeTeam, IsWinner: winner0},
+					{Name: m.AwayTeam, IsWinner: winner1},
+				},
+				Games:      games,
+				TotalScore: [2]int{homeGoals, awayGoals},
+			})
+		}
+		result = append(result, BracketV2Stage{Stage: e.name, Matchups: matchups})
+	}
+	return result
 }
 
