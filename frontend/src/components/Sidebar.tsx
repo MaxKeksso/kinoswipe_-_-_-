@@ -6,7 +6,7 @@ import { Theme } from '../hooks/useTheme';
 type AppState =
   | 'auth' | 'genre-questionnaire' | 'room-selection' | 'room-waiting'
   | 'swiping' | 'match' | 'admin' | 'match-links' | 'football'
-  | 'vibe' | 'movie-roulette' | 'evening-recipe' | 'game';
+  | 'vibe' | 'movie-roulette' | 'evening-recipe' | 'game' | 'stronghold';
 
 interface SidebarProps {
   currentState: AppState;
@@ -44,7 +44,8 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: 'Игры',
     items: [
-      { state: 'game', label: 'Космический защитник', icon: '🚀' },
+      { state: 'game',       label: 'Космический защитник', icon: '🚀' },
+      { state: 'stronghold', label: 'Крепость',             icon: '🏰' },
     ],
   },
 ];

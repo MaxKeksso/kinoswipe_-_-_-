@@ -1,0 +1,250 @@
+/* StrongholdGame.css — medieval castle defense */
+
+.sh-wrap {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 16px;
+  background: linear-gradient(160deg, #100800 0%, #1E1000 40%, #0E0800 100%);
+  font-family: 'Georgia', 'Times New Roman', serif;
+  box-sizing: border-box;
+}
+
+/* ── Overlay screens ─────────────────────────────────────────────────────────── */
+.sh-screen {
+  background: rgba(15, 8, 0, 0.97);
+  border: 2px solid #8B6914;
+  border-radius: 12px;
+  padding: 40px 50px;
+  text-align: center;
+  max-width: 440px;
+  width: 100%;
+  margin-top: 60px;
+  box-shadow: 0 0 40px rgba(139, 105, 20, 0.35), inset 0 0 60px rgba(0,0,0,0.5);
+}
+
+.sh-screen-icon {
+  font-size: 3.5rem;
+  margin-bottom: 8px;
+}
+
+.sh-screen-title {
+  font-size: 2.4rem;
+  color: #FFD700;
+  margin: 0 0 6px;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  letter-spacing: 2px;
+}
+
+.sh-screen-sub {
+  color: #A0784A;
+  font-size: 1rem;
+  margin: 0 0 22px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.sh-screen-rules {
+  color: #CCC;
+  margin-bottom: 20px;
+  text-align: left;
+  line-height: 2;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.sh-screen-rules p { margin: 0; font-size: 0.95rem; }
+
+.sh-screen-towers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.sh-tip-tower {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #DDD;
+  font-size: 0.9rem;
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+}
+
+.sh-screen--victory .sh-screen-title { color: #FFD700; }
+.sh-screen--victory { border-color: #FFD700; }
+.sh-screen--defeat .sh-screen-title  { color: #FF5555; }
+.sh-screen--defeat  { border-color: #880000; }
+.sh-screen p { color: #CCC; margin: 8px 0; }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────────── */
+.sh-btn {
+  display: block;
+  width: 100%;
+  padding: 13px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: 'Georgia', serif;
+  cursor: pointer;
+  transition: all 0.18s;
+  letter-spacing: 0.5px;
+}
+
+.sh-btn-primary {
+  background: linear-gradient(135deg, #7B3A0A, #9C4E15);
+  color: #FFD700;
+  border: 1px solid #8B6914;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+.sh-btn-primary:hover { background: linear-gradient(135deg, #9C4E15, #C06020); transform: translateY(-1px); }
+
+.sh-btn-secondary {
+  background: rgba(40, 22, 5, 0.9);
+  color: #AAA;
+  border: 1px solid #444;
+}
+.sh-btn-secondary:hover { background: rgba(70, 40, 10, 0.9); color: #DDD; border-color: #666; }
+
+.sh-btn-wave {
+  background: linear-gradient(135deg, #7B0000, #AA1111);
+  color: #FFD700;
+  border: 1px solid #CC2200;
+  font-family: 'Georgia', serif;
+  font-weight: bold;
+  padding: 11px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 0.95rem;
+  transition: all 0.18s;
+  box-shadow: 0 2px 8px rgba(180,0,0,0.3);
+}
+.sh-btn-wave:hover { background: linear-gradient(135deg, #AA1111, #CC2200); transform: translateY(-1px); }
+
+/* ── Game layout ─────────────────────────────────────────────────────────────── */
+.sh-layout {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  max-width: 100%;
+}
+
+.sh-canvas {
+  display: block;
+  border: 3px solid #8B6914;
+  border-radius: 4px;
+  cursor: crosshair;
+  max-width: 100%;
+  height: auto;
+  box-shadow: 0 0 24px rgba(139, 105, 20, 0.4), inset 0 0 0 1px rgba(255,255,255,0.05);
+  flex-shrink: 0;
+}
+
+/* ── Side panel ──────────────────────────────────────────────────────────────── */
+.sh-panel {
+  width: 195px;
+  flex-shrink: 0;
+  background: rgba(12, 6, 0, 0.97);
+  border: 2px solid #8B6914;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.sh-panel-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #5A3E10;
+}
+
+.sh-stat {
+  font-size: 0.9rem;
+  font-weight: bold;
+  padding: 5px 8px;
+  border-radius: 4px;
+}
+.sh-stat--gold { color: #FFD700; background: rgba(255, 215, 0, 0.1); }
+.sh-stat--hp   { color: #FF7777; background: rgba(255, 100, 100, 0.1); }
+.sh-stat--wave { color: #AACCFF; background: rgba(100, 150, 255, 0.1); }
+
+.sh-panel-label {
+  color: #A0784A;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.sh-panel-label--small { color: #776050; font-size: 0.72rem; margin-top: 2px; }
+
+/* ── Tower buttons ───────────────────────────────────────────────────────────── */
+.sh-tower-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 9px;
+  background: rgba(25, 12, 0, 0.9);
+  border: 1px solid #4A3010;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  color: #DDD;
+  font-family: 'Georgia', serif;
+}
+.sh-tower-btn:hover:not(:disabled):not(.sh-tower-btn--cant) {
+  background: rgba(60, 32, 5, 0.95);
+  border-color: #8B6914;
+  transform: translateY(-1px);
+}
+.sh-tower-btn--sel {
+  background: rgba(80, 50, 8, 0.95) !important;
+  border-color: #FFD700 !important;
+  box-shadow: 0 0 8px rgba(255,215,0,0.2);
+}
+.sh-tower-btn--cant { opacity: 0.45; }
+.sh-tower-btn:disabled { cursor: default; opacity: 0.55; }
+
+.sh-tower-emoji { font-size: 1.5rem; flex-shrink: 0; line-height: 1; }
+.sh-tower-info  { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.sh-tower-name  { font-weight: bold; font-size: 0.82rem; color: #FFD700; }
+.sh-tower-desc  { font-size: 0.67rem; color: #888; }
+.sh-tower-cost  { font-size: 0.78rem; color: #FFD700; }
+
+/* ── Build timer ─────────────────────────────────────────────────────────────── */
+.sh-build-timer {
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: bold;
+  padding: 4px;
+}
+
+/* ── Divider ─────────────────────────────────────────────────────────────────── */
+.sh-divider { border-top: 1px solid #3A2408; margin: 2px 0; }
+
+/* ── Enemy tips ──────────────────────────────────────────────────────────────── */
+.sh-enemy-list { display: flex; flex-direction: column; gap: 3px; }
+.sh-enemy-tip  { font-size: 0.72rem; color: #888; display: flex; gap: 6px; align-items: center; }
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .sh-wrap { padding: 8px; }
+  .sh-layout { flex-direction: column; align-items: center; }
+  .sh-panel { width: 100%; max-width: 672px; flex-direction: row; flex-wrap: wrap; }
+  .sh-panel-stats { flex-direction: row; width: 100%; }
+  .sh-tower-btn { width: calc(50% - 4px); }
+}
