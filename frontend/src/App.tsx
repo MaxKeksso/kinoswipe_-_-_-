@@ -339,13 +339,18 @@ const App: React.FC = () => {
         setMovies(roomMovies);
         setCurrentMovieIndex(0);
       } else {
-        // Если фильмов нет, пробуем создать тестовые
-        console.log('No movies found, creating test movies');
-        const testMovies = await createTestMovies();
-        if (testMovies && Array.isArray(testMovies) && testMovies.length > 0) {
-          setMovies(testMovies);
-          setCurrentMovieIndex(0);
-        } else {
+        // Если фильмов нет — пробуем загрузить все фильмы напрямую
+        console.log('No room movies found, loading all movies');
+        try {
+          const allMovies = await apiService.getAllMovies();
+          if (allMovies && Array.isArray(allMovies) && allMovies.length > 0) {
+            setMovies(allMovies);
+            setCurrentMovieIndex(0);
+          } else {
+            setError('Фильмы не найдены. Попробуйте позже.');
+            setMovies([]);
+          }
+        } catch {
           setError('Фильмы не найдены. Попробуйте позже.');
           setMovies([]);
         }
@@ -357,223 +362,6 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const createTestMovies = async (): Promise<Movie[]> => {
-    const testMoviesData = [
-      {
-        title: 'Матрица',
-        poster_url: 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
-        genre: JSON.stringify(['фантастика', 'боевик']),
-        year: 1999,
-        duration: 136,
-        imdb_rating: 8.7,
-        kp_rating: 8.7,
-        description: 'Хакер Нео узнает, что его реальность - это иллюзия, созданная машинами.',
-      },
-      {
-        title: 'Интерстеллар',
-        poster_url: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
-        genre: JSON.stringify(['фантастика', 'драма']),
-        year: 2014,
-        duration: 169,
-        imdb_rating: 8.6,
-        kp_rating: 8.6,
-        description: 'Исследователи отправляются в космос, чтобы найти новый дом для человечества.',
-      },
-      {
-        title: 'Начало',
-        poster_url: 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg',
-        genre: JSON.stringify(['фантастика', 'триллер']),
-        year: 2010,
-        duration: 148,
-        imdb_rating: 8.8,
-        kp_rating: 8.7,
-        description: 'Профессионал по проникновению в сны получает задание внедрить идею.',
-      },
-      {
-        title: 'Криминальное чтиво',
-        poster_url: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
-        genre: JSON.stringify(['криминал', 'драма']),
-        year: 1994,
-        duration: 154,
-        imdb_rating: 8.9,
-        kp_rating: 8.6,
-        description: 'Переплетенные истории криминального мира Лос-Анджелеса.',
-      },
-      {
-        title: 'Побег из Шоушенка',
-        poster_url: 'https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg',
-        genre: JSON.stringify(['драма']),
-        year: 1994,
-        duration: 142,
-        imdb_rating: 9.3,
-        kp_rating: 9.1,
-        description: 'Банкир приговорен к пожизненному заключению за убийство жены.',
-      },
-      {
-        title: 'Бегущий по лезвию 2049',
-        poster_url: 'https://image.tmdb.org/t/p/w500/gajva2L0rPYkEWj5FlWHauUxPSX.jpg',
-        genre: JSON.stringify(['фантастика', 'триллер']),
-        year: 2017,
-        duration: 164,
-        imdb_rating: 8.0,
-        kp_rating: 7.5,
-        description: 'Молодой детектив раскрывает секрет, который может погубить общество.',
-      },
-      {
-        title: 'Дюна',
-        poster_url: 'https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg',
-        genre: JSON.stringify(['фантастика', 'драма']),
-        year: 2021,
-        duration: 155,
-        imdb_rating: 8.0,
-        kp_rating: 7.8,
-        description: 'Сын знатного рода отправляется на опасную планету Арракис.',
-      },
-      {
-        title: 'Темный рыцарь',
-        poster_url: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
-        genre: JSON.stringify(['боевик', 'криминал', 'драма']),
-        year: 2008,
-        duration: 152,
-        imdb_rating: 9.0,
-        kp_rating: 8.5,
-        description: 'Бэтмен сталкивается с Джокером, хаотичным преступником.',
-      },
-      {
-        title: 'Форрест Гамп',
-        poster_url: 'https://image.tmdb.org/t/p/w500/arw2vcBvePOVz6xHX6yQ0sikV9Q.jpg',
-        genre: JSON.stringify(['драма', 'романтика']),
-        year: 1994,
-        duration: 142,
-        imdb_rating: 8.8,
-        kp_rating: 8.9,
-        description: 'История жизни простого человека, который стал свидетелем важных событий.',
-      },
-      {
-        title: 'Бойцовский клуб',
-        poster_url: 'https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
-        genre: JSON.stringify(['драма', 'триллер']),
-        year: 1999,
-        duration: 139,
-        imdb_rating: 8.8,
-        kp_rating: 8.6,
-        description: 'Офисный работник встречает загадочного торговца мылом.',
-      },
-      {
-        title: 'Крестный отец',
-        poster_url: 'https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg',
-        genre: JSON.stringify(['криминал', 'драма']),
-        year: 1972,
-        duration: 175,
-        imdb_rating: 9.2,
-        kp_rating: 8.7,
-        description: 'История могущественной семьи мафиози в Америке.',
-      },
-      {
-        title: 'Зеленая миля',
-        poster_url: 'https://image.tmdb.org/t/p/w500/velWPhVMQeQKcxggNEU8YmIo52R.jpg',
-        genre: JSON.stringify(['драма', 'фантастика']),
-        year: 1999,
-        duration: 189,
-        imdb_rating: 8.6,
-        kp_rating: 8.9,
-        description: 'Надзиратель тюрьмы знакомится с необычным заключенным.',
-      },
-      {
-        title: 'Список Шиндлера',
-        poster_url: 'https://image.tmdb.org/t/p/w500/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg',
-        genre: JSON.stringify(['драма', 'биография', 'история']),
-        year: 1993,
-        duration: 195,
-        imdb_rating: 8.9,
-        kp_rating: 8.8,
-        description: 'Немецкий бизнесмен спасает жизни евреев во время Холокоста.',
-      },
-      {
-        title: 'Властелин колец: Возвращение короля',
-        poster_url: 'https://image.tmdb.org/t/p/w500/rCzpDGLbOoPwLjy3O7bqj9hs1es.jpg',
-        genre: JSON.stringify(['фэнтези', 'приключения', 'драма']),
-        year: 2003,
-        duration: 201,
-        imdb_rating: 9.0,
-        kp_rating: 8.6,
-        description: 'Финальная битва за Средиземье начинается.',
-      },
-      {
-        title: 'Криминальное чтиво',
-        poster_url: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
-        genre: JSON.stringify(['криминал', 'драма']),
-        year: 1994,
-        duration: 154,
-        imdb_rating: 8.9,
-        kp_rating: 8.6,
-        description: 'Переплетенные истории криминального мира Лос-Анджелеса.',
-      },
-      {
-        title: 'Иллюзионист',
-        poster_url: 'https://image.tmdb.org/t/p/w500/5MXyQfz8xUP3dIFPTubhTsbFY6N.jpg',
-        genre: JSON.stringify(['триллер', 'драма']),
-        year: 2006,
-        duration: 130,
-        imdb_rating: 8.5,
-        kp_rating: 8.4,
-        description: 'Два иллюзиониста вступают в жестокое соперничество.',
-      },
-      {
-        title: 'Исчезнувшая',
-        poster_url: 'https://image.tmdb.org/t/p/w500/gdiLTof3rbPDAmPaCf4g6f46VJu.jpg',
-        genre: JSON.stringify(['триллер', 'драма']),
-        year: 2014,
-        duration: 149,
-        imdb_rating: 8.1,
-        kp_rating: 7.9,
-        description: 'Муж становится главным подозреваемым в исчезновении жены.',
-      },
-      {
-        title: 'Джокер',
-        poster_url: 'https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDte09CU.jpg',
-        genre: JSON.stringify(['криминал', 'драма', 'триллер']),
-        year: 2019,
-        duration: 122,
-        imdb_rating: 8.4,
-        kp_rating: 7.8,
-        description: 'История превращения неудачливого комика в злодея.',
-      },
-      {
-        title: 'Паразиты',
-        poster_url: 'https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg',
-        genre: JSON.stringify(['комедия', 'драма', 'триллер']),
-        year: 2019,
-        duration: 132,
-        imdb_rating: 8.5,
-        kp_rating: 7.6,
-        description: 'Бедная семья устраивается на работу к богатым.',
-      },
-      {
-        title: '1917',
-        poster_url: 'https://image.tmdb.org/t/p/w500/iZf0KyrE25z1sage4SYFLCCrMi9.jpg',
-        genre: JSON.stringify(['военный', 'драма', 'триллер']),
-        year: 2019,
-        duration: 119,
-        imdb_rating: 8.2,
-        kp_rating: 7.8,
-        description: 'Два солдата получают задание доставить важное сообщение.',
-      },
-    ];
-
-    const createdMovies: Movie[] = [];
-    for (const movieData of testMoviesData) {
-      try {
-        const movie = await apiService.createMovie(movieData);
-        createdMovies.push(movie);
-      } catch (err) {
-        console.error('Error creating test movie:', err);
-      }
-    }
-
-    return createdMovies;
   };
 
   const safeMatchList = (arr: unknown): Match[] => {

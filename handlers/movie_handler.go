@@ -80,20 +80,18 @@ func (h *MovieHandler) GetRoomMovies(w http.ResponseWriter, r *http.Request) {
 
 	// Получаем фильмы, которые пользователь еще не свайпнул
 	movies, err := h.movieRepo.GetNotSwipedByUser(roomID, userID, limit)
-	if err != nil {
-		// Если фильмов нет в базе, возвращаем пустой список
-		respondWithJSON(w, http.StatusOK, []models.Movie{})
-		return
-	}
-
-	// Если фильмов нет, пробуем вернуть все фильмы
-	if len(movies) == 0 {
-		allMovies, err := h.movieRepo.GetAll(limit)
-		if err == nil && len(allMovies) > 0 {
-			movies = allMovies
+	if err != nil || len(movies) == 0 {
+		// Если ошибка или все фильмы уже свайпнуты — возвращаем все фильмы
+		allMovies, allErr := h.movieRepo.GetAll(limit)
+		if allErr == nil && len(allMovies) > 0 {
+			respondWithJSON(w, http.StatusOK, allMovies)
+			return
 		}
 	}
 
+	if movies == nil {
+		movies = []models.Movie{}
+	}
 	respondWithJSON(w, http.StatusOK, movies)
 }
 
